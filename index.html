@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>绘图-基本形状的绘制</title>
+	<style>
+		html, body{
+			margin: 0;
+			padding: 0;
+			font-size: 14px;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+		.container{
+			width: 100%;
+			height: 100%;
+			position: relative;
+		}
+
+		.menu-btn{
+			width: 200px;
+			height: 800px;
+			background-color: rgba(200, 200, 200, 0.7);
+			position: absolute;
+			right: 0;
+		}
+
+		.canvas-container{
+			width: 1200px;
+			height: 100%;
+			position: absolute;
+			left: 0;
+			top: 0;
+		}
+
+		canvas{
+			border: solid 1px #ccc;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<!-- <div class="menu-btn"></div> -->
+		<div class="canvas-container">
+			<canvas id="canvas" width="1000" height="1200">您的浏览器不支持画布，请更新浏览器</canvas>
+		</div>
+	</div>
+
+	<script src="draw.js"></script>
+	<script>
+		let c = document.getElementById('canvas');
+		let ctx = c.getContext('2d');
+		let pen = new Draw('canvas');
+
+		// 矩形
+		// pen.rect(20, 20, 100, 300);
+		// pen.triangle(120, 120, 400, 400, 300, 600);
+		// pen.circle(500, 500, 120);
+
+		// // 三角形
+		// pen.triangle(20, 20, 40, 40, 30, 60);
+
+		// // 圆
+		// pen.circle(50, 50, 12);
+
+		// // 正方形
+		// pen.square(401.5, 401.5, 120);
+
+		// // 半圆
+		// pen.semiCircle(120.5, 300.5, 40);
+
+		// pen.line(300, 20, 120, 10);
+
+		// 平行四边形
+		// pen.parallelogram(300, 300, 500, 150, 400, 400);
+
+		// pen.diamond(120, 120, 300, 40, 400, 500);
+	</script>
+</body>
+</html>
