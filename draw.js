@@ -279,7 +279,7 @@ class Dot{
 		return Math.sqrt(dis_x * dis_x + dis_y * dis_y);
 	}
 
-	// 该点与参数坐标的中点
+	// 该点与参数坐标点的中点
 	middle(x, y){
 		return {
 			x: x - (x - this.x)/2,
@@ -317,7 +317,7 @@ class Dot{
 	}
 
 	// 随机生成sum个点的坐标
-	static dotArray(sum){}
+	// static dotArray(sum){}
 }
 
 // 线段
@@ -504,6 +504,11 @@ class Line{
 		}
 	}
 
+	vertex(){
+		// 返回这个线段的顶点
+		return [new Dot(this.d1.x, this.d1.y), new Dot(this.d2.x, this.d2.y)];
+	}
+
 	// 根据坐标点中心对称
 	// 根据线段，镜像对称
 	// 返回两个点
@@ -605,6 +610,15 @@ class Line{
 
 		return Math.sin(rad) * dis;
 		
+	}
+
+	// 垂足
+	vfoot(x, y){
+		// 参数点（x, y）与这条线的垂足
+		// 这个点到这条线的距离
+		let dis = this.distance(x, y);
+
+
 	}
 
 	// 判断一个点是否在这条直线上
@@ -891,6 +905,9 @@ class Plane{
 
 		this.control = arr;
 	}
+
+	// 整体移动
+	// to(){}
 
 	toLeft(dis){
 		this.control.forEach(function(item, index, arr){
