@@ -115,6 +115,10 @@ class Draw{
 		this.ctx.stroke();
 	}
 
+	heart(){
+		// 心形
+	}
+
 
 }
 

@@ -25,10 +25,6 @@ class Box{
 		this.className = '';// 根据class获取元素
 
 		this.attr = {};
-
-		// this.style = {
-		// 	// 样式
-		// };
 	}
 
 	get style(){
