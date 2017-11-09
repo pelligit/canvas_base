@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>div1</title>
+	<script type="text/javascript" src="div1.js"></script>
+</head>
+<body>
+	<canvas id="c" width="400" height="400"></canvas>
+
+	<script type="text/javascript">
+		var c = document.getElementById('c');
+		var ctx = c.getContext('2d');
+
+		var d = new DOM(c);
+
+		// 绘制一个div
+		d.div({
+			width: 120,
+			height: 300,
+			left: 30,
+			top: 50
+		});
+		
+	</script>
+</body>
+</html>

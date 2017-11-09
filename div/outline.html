@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>outline</title>
+
+	<style type="text/css">
+		.box{
+			width: 400px;
+			height: 400px;
+			line-height: 400px;
+			text-align: center;
+			margin: 100px;
+			background-color: #ccc;
+
+
+			outline-color: #red;
+			outline-width: 30px;
+
+			/*border: solid 20px #666;*/
+			border-width: 20px;
+			border-color: #ff0000;
+
+			border-radius: 100px;
+			/*outline-style: dotted;*/
+		}
+
+		.dotted{
+			outline-style: dotted;
+			border-style: dotted;
+		}
+
+		.dashed{
+			outline-style: dashed;
+			border-style: dashed;
+		}
+
+		.solid{
+			outline-style: solid;
+			border-style: solid;
+		}
+
+		.double{
+			outline-style: double;
+			border-style: double;
+		}
+
+		.groove{
+			outline-style: groove;
+			border-style: groove;
+		}
+
+		.ridge{
+			outline-style: ridge;
+			border-style: ridge;
+		}
+
+		.inset{
+			outline-style: inset;
+			border-style: inset;
+		}
+
+		.outset{
+			outline-style: outset;
+			border-style: outset;
+		}
+	</style>
+</head>
+<body>
+	<div class="box dotted" onclick="dotted();">dotted</div>
+	<div class="box dashed" onclick="dashed();">dashed</div>
+	<div class="box solid" onclick="solid();">solid</div>
+	<div class="box double" onclick="double();">double</div>
+	<div class="box groove" onclick="groove();">groove</div>
+	<div class="box ridge" onclick="ridge();">ridge</div>
+	<div class="box inset" onclick="inset();">inset</div>
+	<div class="box outset" onclick="outset();">outset</div>
+
+
+	<script type="text/javascript">
+		function dotted(){
+			alert('dotted()');
+		}
+
+		function dashed(){
+			alert('dashed()');
+		}
+
+		function solid(){
+			alert('solid()');
+		}
+
+		function double(){
+			alert('double()');
+		}
+
+		function groove(){
+			alert('groove()');
+		}
+
+		function ridge(){
+			alert('ridge()');
+		}
+
+		function inset(){
+			alert('inset()');
+		}
+
+		function outset(){
+			alert('outset()');
+		}
+
+	</script>
+</body>
+</html>
