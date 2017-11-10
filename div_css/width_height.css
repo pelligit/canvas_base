@@ -1,0 +1,182 @@
+#app-navigation .app-navigation-input {
+	width: 95%;
+}
+
+#app-navigation .color-button {
+	height: 25px;
+}
+
+#app-navigation .close-button {
+	height: 30px;
+	width: 30px;
+}
+
+#app-navigation .accept-button {
+	width: 100%;
+}
+
+#app-navigation .new-entity,
+#app-navigation .subscription-title {
+	width: 100%;
+}
+
+#app-navigation .add-new .color-button {
+	height: 25px;
+}
+
+.add-new-subscription .calendarlist-fieldset input {
+	width: 130px;
+}
+
+.add-new-subscription .calendarlist-fieldset select {
+	width: 80px;
+}
+
+#app-navigation .app-navigation-list {
+	width: 100%;
+}
+
+#app-navigation .app-navigation-list-item .calendarCheckbox,
+#publicinformationscontainer .calendarCheckbox {
+	width: 12px;
+	height: 12px;
+}
+
+#app-navigation .app-navigation-list-item .utils {
+	height: 44px;
+}
+
+#app-navigation .app-navigation-list-item .editfieldset .calendartype {
+	width: 100%;
+}
+
+#app-navigation .buttongroups .accept-button {
+	width: 47%;
+}
+
+#app-navigation .editfieldset .close-button {
+	width: 47%;
+}
+
+#app-navigation .app-navigation-entry-menu li {
+	width: auto !important;
+	height: 36px;
+}
+
+#app-navigation .app-navigation-entry-menu li button {
+	width: 100% !important;
+}
+
+#app-navigation .app-navigation-entry-menu li span {
+	height: 36px;
+}
+
+#app-navigation .app-navigation-entry-menu li span.svg {
+	width: 36px;
+}
+
+#app-navigation .app-navigation-list-item .utils .action span {
+	height: 20px;
+	width: 16px;
+}
+
+#app-navigation .app-navigation-list-item span.calendarlist-icon.shared {
+	width: 40px;
+}
+
+#app-navigation .refresh-shares {
+	height: 15px;
+	width: 15px;
+}
+
+/* ColorPicker overrides. */
+.colorpicker {
+	display: block;
+	height: auto;
+	padding-bottom: 3px;
+	padding-top: 3px;
+}
+
+.colorpicker .colorpicker-list {
+	width: 100%;
+	height: 100%;
+}
+
+.colorpicker .colorpicker-list li {
+	height: 24px;
+	width: 24px !important;
+}
+
+.colorpicker .colorpicker-list .color-selector-label {
+	height: 24px;
+	width: 24px !important;
+}
+
+#scrollable {
+	width: 250px;
+}
+
+#datepicker-ng-show-container {
+	height: 185px;
+}
+
+
+#datepicker-ng-show-container.ng-hide {
+	height: 0;
+}
+
+/* Spacing */
+#spacer {
+	height: 44px;
+}
+
+/* Public */
+
+#app-navigation .davbuttons {
+	width: 100%;
+	height: 44px;
+}
+
+#app-navigation .davbuttons .button {
+	width: 48%;
+}
+
+
+input.public-linkinput {
+	width: 94%;
+}
+
+.public-ics-download {
+	width: 100%;
+	height: 25px;
+}
+
+.integration-code {
+	width: 93%;
+	height: 100px;
+}
+
+
+input.mailerInput {
+	width: 94%;
+}
+
+.mailerInput + button {
+	width: 100%;
+}
+
+/* Calendar Sharing */
+input.shareeInput {
+	width: 89%;
+	margin: 6px;
+}
+
+
+li.calendar-share-item {
+	width: 95% !important;
+}
+
+
+ul.dropdown-menu {
+	width: 89%;
+}
