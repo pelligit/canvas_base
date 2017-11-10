@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>盒子模型的所有可设置样式</title>
+
+	<style type="text/css">
+		.box{
+			width: 120px;
+			height: 120px;
+			/*float: left;*/
+			/*margin: 10px 3px 4px 6px;*/
+			padding: 8px 3px 2px;
+			cursor: pointer;
+			text-align: center;
+			text-decoration: underline;
+			background-color: #ccc;
+			border: solid 1px #aaa;
+			border-radius: 5px;
+			/*box-shadow: 12px 12px 2px rgba(255, 12, 12, 0.5);*/
+			outline: dashed 12px rgba(200, 200, 200, 0.8);
+		}
+
+		#box22{
+			width: 200px;
+			height: 200px;
+			border: solid 3px #ddd;
+		}
+	</style>
+</head>
+<body>
+	<div id="box" class="box" data-name="pelli" data-age="19">
+		你好
+		<div class="box1" id="box1">
+			这里是什么
+		</div>
+
+		<div class="box2" id="box2">
+			<div id="box_21" class="box_21"></div>
+		</div>
+	</div>
+
+	<div id="box22"></div>
+</body>
+</html>
