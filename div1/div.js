@@ -1,4 +1,4 @@
-// (function(){
+(function(){
 	function TYPE(){
 		this.is = function(o, type){
 			return (Object.prototype.toString.call(o)).toLowerCase() === '[object '+ type.toLowerCase() +']';
@@ -53,6 +53,25 @@
 			}else{
 				return false;
 			}
+		};
+
+		// 是颜色值:rgb,hsl,rgba, hsla, #ffeeaa
+		this.isColor = function(val){
+
+		};
+
+		// 是边框样式：solid,dashed,
+		this.isBorderStyle = function(val){};
+
+		// 是长度值：1px，2px，3px之类的
+		this.isLength = function(val){};
+
+		// 是百分比单位
+		this.isPercentage = function(val){};
+
+		// 是图片路径
+		this.isImgUrl = function(val){
+
 		};
 	}
 
@@ -256,6 +275,9 @@
 	// 初始化数据库
 	DB.init(['animate', 'event']);
 
+	// 用户实例
+	var USER_CASE = null;
+
 	
 
 	// 单个对象的动画数据，内部使用
@@ -308,6 +330,9 @@
 
 	function DIV(obj){
 		var _obj = obj || {};
+		// 功能
+		// 解析css：边框，背景，尺寸，内容，子元素
+		// 动画，交互
 
 		// 过滤
 		// 解析
@@ -319,6 +344,7 @@
 		// 获取到未统一的数据格式
 		var _css = _PARSE.getResult();
 
+		// 格式化样式:缺少基本尺寸
 		var _style = formatCss(_css);
 
 		// 格式化后的css属性数据
@@ -411,7 +437,7 @@
 			var _DRAW = new DRAW();
 
 			// 画出来
-			_DRAW.render();
+			_DRAW.render(this.style);
 		};
 
 		this.append = function(other_div){
@@ -482,6 +508,11 @@
 		this.width = canvas.width;
 		this.height = canvas.height;
 
+		USER_CASE = this;
+
+		// 获取canvas元素在页面中的位置
+
+
 		// 事件不能添加到outline上
 		// 
 
@@ -504,29 +535,29 @@
 	}
 
 	// 设置绘图句柄的属性
-	function SetCTXProperties(){
-		var obj = {
-			fillStyle: '',
-			'filter': '',
-			font: '',
-			globalAlpha: '',
-			lineCap: '',
-			lineDashOffset: '',
-			lineJoin: '',
-			lineWidth: '',
-			miterLimit: '',
-			shadowBlur: '',
-			shadowColor: '',
-			shadowOffsetX: '',
-			shadowOffsetY: '',
-			strokeStyle: '',
-			textAlign: '',
-			textBaseline: '',
-			globalCompositeOperation: '',
-			imageSmoothingEnabled: true,
-			imageSmoothingQuality: '',
-		};
-	}
+	// function SetCTXProperties(){
+	// 	var obj = {
+	// 		fillStyle: '',
+	// 		'filter': '',
+	// 		font: '',
+	// 		globalAlpha: '',
+	// 		lineCap: '',
+	// 		lineDashOffset: '',
+	// 		lineJoin: '',
+	// 		lineWidth: '',
+	// 		miterLimit: '',
+	// 		shadowBlur: '',
+	// 		shadowColor: '',
+	// 		shadowOffsetX: '',
+	// 		shadowOffsetY: '',
+	// 		strokeStyle: '',
+	// 		textAlign: '',
+	// 		textBaseline: '',
+	// 		globalCompositeOperation: '',
+	// 		imageSmoothingEnabled: true,
+	// 		imageSmoothingQuality: '',
+	// 	};
+	// }
 
 	// 单纯的画一个div
 	function DRAW(ctx){
@@ -571,6 +602,10 @@
 			// 图片位置
 			// 图片大小
 			// 是否重复
+			// 
+			// 如果有图片的话，则需要将背景图片绘制在里另外一个canvas中
+			// 另外一个canvas是与该canvas相互重叠的，同尺寸的
+			// 在底层的一个
 		};
 
 		// 画边框
@@ -598,9 +633,10 @@
 			// 基本位置
 			var w = css.width;
 			var h = css.height;
-			var x = css.left,
+			var x = css.left;
 			var y = css.top;
 
+			// 相对于父元素
 			var base = {
 				x: css.left,
 				y: css.top,
@@ -711,6 +747,7 @@
 		}
 
 		this.getResult = function(){
+			var _base = this.base();
 			var _box_shadow = this.boxShadow();
 			var _background = this.background();
 			var _border = this.border();
@@ -718,7 +755,19 @@
 			var _text = this.text();
 
 			// 合并这几个样式
-			return combineObject(_box_shadow, _background, _border, _outline, _text);
+			return combineObject(_base, _box_shadow, _background, _border, _outline, _text);
+		};
+
+		// 基本样式：尺寸和位置
+		this.base = function(){
+			var base_obj = {
+				width: '',
+				height: '',
+				left: '',
+				top: ''
+			};
+
+			return deal(this.list, base_obj);
 		};
 
 		// 获取盒子模型的阴影样式
@@ -732,7 +781,7 @@
 		};
 
 		// 获取背景样式
-		this.background = function{
+		this.background = function(){
 			var background_obj = {
 				backgroundColor: '#red',
 				backgroundImage: 'url(./path/fdsf.png)',
@@ -812,11 +861,11 @@
 				wordSpacing: '',
 				textOverflow: '', 	// 文字溢出
 				wordWrap: '',		// 自动换行
-				wordBreak: ''		// 
+				wordBreak: '',		// 
 				textShadow: ''
 			};
 
-			return deal(this.list, border_obj);
+			return deal(this.list, text_obj);
 		}
 
 		// 轮廓样式
@@ -842,7 +891,7 @@
 	}
 
 	function formatCss(obj){
-		var rgba = /^rgba\([0-2][0-9][0-9]\,\)/;
+		// var rgba = /^rgba\([0-2][0-9][0-9]\,\)/;
 
 		if(obj && _TYPE.isObject(obj)){
 			for(var name in obj){
@@ -857,7 +906,154 @@
 		// 格式化单位
 		// 格式化文字
 		// 判断值有哪些
+		return obj;
 	}
 
 	window.DOM = DOM;
-// })();
+})();
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+function drawDiv(ctx, obj){
+	if(obj){
+		// 不包括边框的矩形范围
+		createDivPath(ctx, obj);
+		ctx.stroke();
+
+		// 边框宽度为10
+		// 边框中心线
+		createDivPath(ctx, {
+			width: obj.width + 10,
+			height: obj.height + 10,
+			left: obj.left - 10/2,
+			top: obj.top - 10/2
+		});
+
+		// 根据这个绘制边框
+		ctx.stroke();
+
+		// div范围边线
+		// 带边框的
+		// 根据这部分绘制背景
+		createDivPath(ctx, {
+			width: obj.width + 10 * 2,
+			height: obj.height + 10 * 2,
+			left: obj.left - 10,
+			top: obj.top - 10
+		});
+
+		ctx.stroke();
+	}
+}
+
+
+// 创建div的绘制路径
+function createDivPath(ctx, baseObj){
+	if(baseObj){
+		var w = baseObj.width;
+		var h = baseObj.height;
+		var x = baseObj.left;
+		var y = baseObj.top;
+
+		// 数值：3,4,5，,5，之类的
+		var radius = baseObj.borderRadius || 0;
+
+		// 四个顶点
+		var l_t_x = x;
+		var l_t_y = y;
+
+		var r_t_x = x + w;
+		var r_t_y = y;
+
+		var r_b_x = x + w;
+		var r_b_y = y + h;
+
+		var l_b_x = x;
+		var l_b_y = y + h;
+
+		// 确定矩形的圆角
+		if(w > h){
+			var half_h = h/2;
+			if(radius >= half_h){
+				// 圆角大于h
+				radius = half_h;
+			}
+		}else{
+			var half_w = w/2;
+			if(radius >= half_w){
+				radius = half_w;
+			}
+		}
+
+		// 顶边
+		var line_t_left_x = x + radius;
+		var line_t_left_y = y;
+
+		var line_t_right_x = x + w - radius;
+		var line_t_right_y = y;
+
+		// 右边
+		var line_r_top_x = x + w;
+		var line_r_top_y = y + radius;
+
+		var line_r_bottom_x = x + w;
+		var line_r_bottom_y = y + h - radius;
+
+		// 底边
+		var line_b_right_x = x + w - radius;
+		var line_b_right_y = y + h;
+
+		var line_b_left_x = x + radius;
+		var line_b_left_y = y + h;
+
+		// 左边
+		var line_l_bottom_x = x;
+		var line_l_bottom_y = y + h - radius;
+
+		var line_l_top_x = x;
+		var line_l_top_y = y + radius;
+
+		ctx.beginPath();
+
+		// 开始绘画
+		// 顶边
+		ctx.moveTo(line_t_left_x, line_t_left_y);
+		ctx.lineTo(line_t_right_x, line_t_right_y);
+
+		// 上-右
+		ctx.arcTo(r_t_x, r_t_y, line_r_top_x, line_r_top_y, radius);
+
+		// 右边
+		ctx.lineTo(line_r_top_x, line_r_top_y);
+		ctx.lineTo(line_r_bottom_x, line_r_bottom_y);
+
+		// 右-底
+		ctx.arcTo(r_b_x, r_b_y, line_b_right_x, line_b_right_y, radius);
+
+		// 底边
+		ctx.lineTo(line_b_right_x, line_b_right_y);
+		ctx.lineTo(line_b_left_x, line_b_left_y);
+
+		// 底-左
+		ctx.arcTo(l_b_x, l_b_y, line_l_bottom_x, line_l_bottom_y, radius);
+
+		// 左边
+		ctx.lineTo(line_l_bottom_x, line_l_bottom_y);
+		ctx.lineTo(line_l_top_x, line_l_top_y);
+
+		// 左-上
+		ctx.arcTo(l_t_x, l_t_y, line_t_left_x, line_t_left_y, radius);
+
+		ctx.closePath();
+	}
+}
+
