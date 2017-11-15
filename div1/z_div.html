@@ -25,28 +25,31 @@
 
 		var d = new DOM(c);
 
-		// 绘制一个div
-		d.div({
+		// 创建一个div
+		var a_div = d.div({
 			width: 120,
 			height: 300,
 			left: 30,
 			top: 50,
 			borderRadius: 30,
-			borderWidth: 5,
+			borderWidth: 2,
 			borderStyle: 'solid'
-		});
+		}, '你们好');
+
+		// 将这个div画出来
+		a_div.draw();
 
 
 
 
-		drawDiv(ctx, {
-			width: 100,
-			height: 100,
-			left: 30,
-			top: 50,
-			border: 'solid 2px #ccc',
-			// borderRadius: 70
-		});
+		// drawDiv(ctx, {
+		// 	width: 100,
+		// 	height: 100,
+		// 	left: 30,
+		// 	top: 50,
+		// 	border: 'solid 2px #ccc',
+		// 	borderRadius: 70
+		// });
 		
 	</script>
 </body>
