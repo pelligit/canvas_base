@@ -1,4 +1,40 @@
 (function(){
+	// 全局变量
+	// 会一直使用的变量
+
+	// 数据类型
+	var _G_TYPE = new TYPE();
+
+	// 工具
+	var _G_TOOL = new Tools();
+
+	// 唯一的键
+	var _G_KEY = new KEY();
+
+	// 用户实例
+	var USER_CASE = null;
+
+	// 用户的动画循环
+	var USER_A = new Animation();
+
+	// 用户数据库
+	var USER_DB = new DATABASE();
+
+	// 初始化用户数据表
+	USER_DB.init(['animate', 'event', 'element', 'snapshoot']);
+
+	// 内部使用的数据库
+	var INNER_DB = new DATABASE();
+
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+
+	// 工具类
+	// 类型判断
 	function TYPE(){
 		this.is = function(o, type){
 			return (Object.prototype.toString.call(o)).toLowerCase() === '[object '+ type.toLowerCase() +']';
@@ -14,6 +50,13 @@
 		
 		this.isNumber = function(o){
 			return this.is(o, 'number');
+		};
+
+		// 可用于计算的数字类型
+		this.isCanCalculateNumber = function(o){
+			// 不是NaN
+			// 不是infinite
+			return this.isNumber(o) && !isNan(o) && isFinite(o);
 		};
 
 		this.isString = function(o){
@@ -64,6 +107,34 @@
 			return !(this.isObject(o) || this.isArray(o));
 		};
 
+		// 是不是事件的名字
+		this.isEventName = function(o){
+			if(!o || !_G_TYPE.isString(o)){
+				return false;
+			}
+
+			var event_list = EVENT_LIST();
+			var arr = [];
+			var event_arr = arr.concat(event_list['elem_event'], event_list['doc_event']);
+			var len = event_arr.length;
+
+			for(var i = 0; i < len; i++){
+				if(event_arr[i] == o.toLowerCase()){
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		this.isKeyBoardEventName = function(name){
+			if(name && (name.toLowerCase() === 'keydown' || name.toLowerCase() === 'keypress' || name.toLowerCase() === 'keyup')){
+				return true;
+			}else{
+				return false;
+			}
+		};
+
 		// 是颜色值:rgb,hsl,rgba, hsla, #ffeeaa
 		this.isColor = function(val){
 
@@ -84,15 +155,15 @@
 		};
 	}
 
-	// 工具
+	// 工具，杂项工具
 	function Tools(){
 		// 深刻隆
 		this.deepClone = function(obj){
 			var _obj, _this = this;
 
-			if(_TYPE.isObject(obj)){
+			if(_G_TYPE.isObject(obj)){
 				_obj = {};
-			}else if(_TYPE.isArray(obj)){
+			}else if(_G_TYPE.isArray(obj)){
 				_obj = [];
 			}else{
 				// 简单类型
@@ -100,7 +171,7 @@
 			}
 
 			for(var propName in obj){
-				if(_TYPE.isValue(obj[propName])){
+				if(_G_TYPE.isValue(obj[propName])){
 					_obj[propName] = obj[propName];
 				}else{
 					// 引用类型
@@ -110,7 +181,71 @@
 
 			return _obj;
 		};
+
+		// 创建canvas元素
+		this.createCanvas = function(w, h){
+			var _w = w && _G_TYPE.isCanCalculateNumber(w) ? w : 300;
+			var _h = h && _G_TYPE.isCanCalculateNumber(h) ? h : 150;
+
+			var canva = document.createElement('canvas');
+			canva.width = _w;
+			canva.height = _h;
+
+			return canva;
+		};
+
+		// canvas所有属性的名字
+		this.canvasProperties = function(){
+			return {
+				fillStyle: '',
+				font: '',
+				globalAlpha: '',
+				lineCap: '',
+				lineDashOffset: '',
+				lineJoin: '',
+				lineWidth: '',
+				miterLimit: '',
+				shadowBlur: '',
+				shadowColor: '',
+				shadowOffsetX: '',
+				shadowOffsetY: '',
+				strokeStyle: '',
+				textAlign: '',
+				textBaseline: '',
+				globalCompositeOperation: '',
+				imageSmoothingEnabled: true,
+				imageSmoothingQuality: ''
+			};
+		};
+
+		// 将参数对象合并成一个对象
+		this.combineObject = function(){
+			var len = arguments.length;
+			var obj = {};
+
+			var temp_obj = null;
+
+			for(var i = 0; i < len; i++){
+				temp_obj = arguments[i];
+
+				if(_G_TYPE.isObject(temp_obj)){
+					for(var name in temp_obj){
+						obj[name] = temp_obj[name];
+					}
+				}
+			}
+
+			return obj;
+		};
 	}
+
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// 唯一ID
 
 	function KEY(){
 		var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
@@ -143,146 +278,167 @@
 		};
 	}
 
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// 数据库模型
+
+	// 数据表
+	function TABLE(name){
+		this.name = name || _G_KEY.getLetters(6);
+		
+		// 真正的数据
+		var _data = {
+			// id1: {
+
+			// },
+			// id2: {},
+			// id3: {},
+		};
+
+		// 数据索引
+		var _index = [];
+
+		this.add = function(data){
+			var _id = id in data && data.id.length > 0 && data.id || false;
+			var id = null;
+
+			if(_id){
+				id = _id;
+			}else{
+				id = _G_KEY.getKey(this.name);
+			}
+
+			_index.push(id);
+			_data[id] = data;
+
+			// 增加一条数据
+			return id;
+		};
+
+		// id是字符串
+		// index是数字
+		// 两种数据类型，字符串和数字
+		this.del = function(patter){
+			// 序号,序号
+			if(_G_TYPE.isNumber(patter)){
+				var obj_id = this.id(patter);
+				if(obj_id){
+					// 返回了正确的ID
+					delete _data[obj_id];
+					
+					// 删除这个序号
+					_index = _index.splice(patter, 1);
+
+					return true;
+				}else{
+					return false;
+				}
+				// 数字，根据序号删除数据
+			}else if(_G_TYPE.isString(patter)){
+				if(patter in _data){
+					var obj_index = this.index(patter);
+
+					delete _data[patter];
+					_index = _index.splice(obj_index, 1);
+
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				return false;
+			}
+		};
+
+		this.get = function(id){
+			// 获取id为id的数据
+			if(id in _data){
+				var _i = 0;
+				var len = _index.length;
+				for(var i = 0; i < len; i++){
+					if(_index[i] == id){
+						_i = i;
+						break;
+					}
+				}
+
+				return {
+					data: _data[id],
+					index: _i
+				}
+				
+			}else{
+				// 不存在data中
+				return false;
+			}
+		};
+
+		this.modify = function(id, newData){
+			// 修改数据
+		};
+
+		// 返回所有的
+		this.all = function(){
+			return _data;
+		};
+
+		// 根据顺序返回数据
+		this.eq = function(i){
+			var id = this.id(i);
+
+			if(id){
+				return _data[id];
+			}else{
+				return false;
+			}
+		};
+
+		// 根据序号返回ID
+		this.id = function(i){
+			// 必须是整数
+			if(_G_TYPE.isInt(i) && i >= 0 && i < _index.length){
+				return _index[i];
+			}else{
+				return false;
+			}
+		};
+
+		// 根据id返回顺序
+		this.index = function(id){
+			// 字符串
+			if(_G_TYPE.isString(id)){
+				var len = _index.length;
+				for(var i = 0; i < len; i++){
+					if(_index[i] == id){
+						return i;
+					}
+				}
+
+				return false;
+			}else{
+				return false;
+			}
+		};
+
+		// 获取该ID的元素
+		this.getById = function(id){
+			return (this.get(id))['data'];
+		};
+
+		// 根据序号返回元素
+		this.getByIndex = function(index){
+			var _id = this.id(index);
+			return (this.get(_id))['data'];
+		};
+	}
+
+
 	// 数据库
 	function DATABASE(){
-		// var _this = this;
-		// 表
-		function TABLE(name){
-			this.name = name || _KEY.getLetters(6);
-			
-			// 真正的数据
-			var _data = {
-				// id1: {
-
-				// },
-				// id2: {},
-				// id3: {},
-			};
-
-			var _index = [];
-
-			this.add = function(data){
-				var _id = id in data && data.id.length > 0 && data.id || false;
-				var id = null;
-
-				if(_id){
-					id = _id;
-				}else{
-					id = _KEY.getKey(this.name);
-				}
-
-				_index.push(id);
-				_data[id] = data;
-
-				// 增加一条数据
-				return id;
-			};
-
-			// id是字符串
-			// index是数字
-			// 两种数据类型，字符串和数字
-			this.del = function(patter){
-				// 序号,序号
-				if(_TYPE.isNumber(patter)){
-					var obj_id = this.id(patter);
-					if(obj_id){
-						// 返回了正确的ID
-						delete _data[obj_id];
-						
-						// 删除这个序号
-						_index = _index.splice(patter, 1);
-
-						return true;
-					}else{
-						return false;
-					}
-					// 数字，根据序号删除数据
-				}else if(_TYPE.isString(patter)){
-					if(patter in _data){
-						var obj_index = this.index(patter);
-
-						delete _data[patter];
-						_index = _index.splice(obj_index, 1);
-
-						return true;
-					}else{
-						return false;
-					}
-				}else{
-					return false;
-				}
-			};
-
-			this.get = function(id){
-				// 获取id为id的数据
-				if(id in _data){
-					var _i = 0;
-					var len = _index.length;
-					for(var i = 0; i < len; i++){
-						if(_index[i] == id){
-							_i = i;
-							break;
-						}
-					}
-
-					return {
-						data: _data[id],
-						index: _i
-					}
-					
-				}else{
-					// 不存在data中
-					return false;
-				}
-			};
-
-			this.modify = function(id, newData){
-				// 修改数据
-			};
-
-			// 返回所有的
-			this.all = function(){
-				return _data;
-			};
-
-			// 根据顺序返回数据
-			this.eq = function(i){
-				var id = this.id(i);
-
-				if(id){
-					return _data[id];
-				}else{
-					return false;
-				}
-			};
-
-			this.id = function(i){
-				// 必须是整数
-				if(_TYPE.isInt(i) && i >= 0 && i < _index.length){
-					return _index[i];
-				}else{
-					return false;
-				}
-			};
-
-			// 根据id返回顺序
-			this.index = function(id){
-				// 字符串
-				if(_TYPE.isString(id)){
-					var len = _index.length;
-					for(var i = 0; i < len; i++){
-						if(_index[i] == id){
-							return i;
-						}
-					}
-
-					return false;
-				}else{
-					return false;
-				}
-			};
-		}
-		
 		/**
 		 * [init description]
 		 * @param  {[string||array]} name [初始化数据库]
@@ -290,86 +446,372 @@
 		 */
 		this.init = function(name){
 			if(name){
-				if(_TYPE.isString(name)){
+				if(_G_TYPE.isString(name)){
 					console.log('字符串');
 					this[name] = new TABLE(name);
 				// }else if(Object.prototype.toString.call(name) === '[object Array]'){
-				}else if(_TYPE.isArray(name)){
+				}else if(_G_TYPE.isArray(name)){
 					// 数组
 					var len = name.length;
 					for(var i = 0; i < len; i++){
-						this[name[i]] = new TABLE(name[i]);
+						if(_G_TYPE.isString(name[i])){
+							this[name[i]] = new TABLE(name[i]);
+						}
 					}
 				}
 			}
 		};
+
+		// 新增一个table
+		this.addTable = function(name){
+			if(name && _G_TYPE.isString(name)){
+				// 如果已经存在了这个表，则直接返回
+				if(name in this){
+					return this[name];
+				}else{
+					this[name] = new TABLE(name[i]);
+
+					return this[name];
+				}
+			}else{
+				// 如果不存在名字或者名字的值不是字符串
+				// 则返回false
+				return false;
+			}
+		};
+
+		// 删除表
+		this.delTable = function(name){
+			if(name && _G_TYPE.isString(name)){
+				// 如果已经存在了这个表，则直接返回
+				if(name in this){
+					this[name] = null;
+					delete this[name];
+
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				// 如果不存在名字或者名字的值不是字符串
+				// 则返回false
+				return false;
+			}
+		};
 	}
 
-	// 数据类型
-	var _TYPE = new TYPE();
-	// 工具
-	var _TOOL = new Tools();
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	
 
-	// 唯一的键
-	var _KEY = new KEY();
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// 实例化event表
+	var event_table_ok = addEventTable();
 
-	// 数据库
-	var DB = new DATABASE();
+	function addEventTable(){
+		var event_list = EVENT_LIST();
 
-	// 初始化数据库
-	DB.init(['animate', 'event']);
+		// 全局
+		var doc = event_list['doc_event'];
 
-	// 用户实例
-	var USER_CASE = null;
+		doc.forEach(function(item, index, arr){
+			var _obj = {
+				id: item,
+				callback: []
+			};
+
+			USER_DB.event.add(_obj);
+		});
+
+		var elem = event_list['elem_event'];
+
+		elem.forEach(function(item, index, arr){
+			var _obj = {
+				id: item,
+				callback: []
+			};
+
+			USER_DB.event.add(_obj);
+		});
+
+		return true;
+	}
+
+	// 事件列表
+	function EVENT_LIST(){
+		// 鼠标事件
+		var mouse_event = [
+			'click',
+			'contextmenu',
+			'dblclick',
+			'mousedown',
+			'mouseenter',
+			'mouseleave',
+			'mousemove',
+			'mouseover',
+			'mouseout',
+			'mouseup',
+			'wheel'
+		];
+
+		// 键盘事件
+		var keyboard_event = [
+			'keydown',
+			'keyup',
+			'keypress'
+		];
+
+		// 移动端事件
+		var h5_event = [
+			'touchstart',
+			'touchmove',
+			'touchend',
+			'touchcancel',
+			'tap',
+			'longTap',
+			'singleTap',
+			'doubleTap',
+			'swipe',
+			'swipeLeft',
+			'swipeRight',
+			'swipeUp',
+			'swipeDown',
+		];
+
+		var canvas_event = mouse_event.concat(h5_event);
+
+		return {
+			elem_event: canvas_event,
+			doc_event: keyboard_event
+		}
+	}
 
 
-	// // 单个对象的动画数据，内部使用
-	// function ONE_ANIMATE(){
-	// 	this.status = '0,1,2';// 0, 表示没有开始，1，表示正在进行，2，表示暂停
+	function ELEM_ADD_EVENT(elem){
+		var event_list = EVENT_LIST();
+		var canvas_event = event_list['elem_event'];
 
-	// 	// 开始动画
-	// 	this.start = function(){};
+		canvas_event.forEach(function(item, index, arr){
+			// 判断事件发生的位置是否在这个元素区域内部
+			// 如果在元素区域内部
+			// 则执行事件，如果不在元素区域内部，则不执行
+			// 
+			elem['on' + item] = function(_event){
+				operatEvent(item, _event);
+			};
+		});
 
-	// 	// 结束动画
-	// 	this.end = function(){};
+		// 全局事件
+		var document_event = event_list['doc_event'];
+		document_event.forEach(function(item, index, arr){
+			document.body['on' + item] = function(_event){
+				operatEvent(item, _event);
+			};
+		});
 
-	// 	// 暂停动画
-	// 	this.pause = function(){};
+		function operatEvent(item, _event){
+			var event_nameval = _event.type;
 
-	// 	// 重新开始
-	// 	this.restart = function(){};
+			// 读取事件队列里面的内容
+			var callbacks = (USER_DB.event.get(item))['callback'];
 
-	// 	// 翻转动画
-	// 	this.reverse = function(){};
-	// }
+			for(var name in callbacks){
+				var elem_id = name;
 
-	// // 全局的动画循环
-	// // 所有的动画都依赖这一个动画循环
-	// // 而不是每次都重新创建动画循环
-	// function GLOBAL_ANIMATE(){
-	// 	// 帧计数，每次动画循环+1
-	// 	this.frame_count = 0;
+				var elem_obj = USER_DB.element.getById(elem_id);
+				var fn_list = callbacks[name];
 
-	// 	// 一共开始了多少时间
-	// 	this.time_count = 0;
-	// 	this.start_time = 0;
-	// 	this.fps = 0;
+				if(_G_TYPE.isKeyBoardEventName(event_nameval)){
 
-	// 	// 动画循环的ID
-	// 	this.id = null;
-		
-	// 	// 暂停
-	// 	this.pause = function(){};
+					fn_list.forEach(function(item, index, arr){
+						if(item && _G_TYPE.isFunction(item)){
+							item.call(elem_obj, _event);
+						}
+					});
+				}else{
+					// 鼠标或者移动端手势事件
+					// 判断位置
+					// 这里需要进行位置转换
+					var x = _event.x;
+					var y = _event.y;
 
-	// 	// 开始
-	// 	this.start = function(){};
+					if(elem_obj.isPointInArea(x, y)){
+						fn_list.forEach(function(item, index, arr){
+							if(item && _G_TYPE.isFunction(item)){
+								item.call(elem_obj, _event);
+							}
+						});
+					}else{
+						console.log('鼠标位置不在该元素区域，不触发事件');
+					}
+				}
+			}
+		}
+	}
 
-	// 	// 停止,结束
-	// 	this.stop = function(){};
+	// 在元素上添加事件方法
+	// 传递一个对象
+	function AddEventMethod($_this){
+		// 事件
+		$_this.on = function(type, fn){
+			// 添加事件
+			// _this[type]
+			if(_G_TYPE.isEventName(type)){
+				// 如果是事件的名字
+				if(fn && _G_TYPE.isFunction(fn)){
+					$_this[type](fn);
+				}
+			}
+		};
 
-	// 	this.init = function(){};
-	// }
+		// 事件函数
+		var event_list = EVENT_LIST();
+		var obj_event = event_list['canvas_event'];
+		var global_event = event_list['doc_event'];
 
+		obj_event.forEach(function(item, index, arr){
+			addElemEventMethod(item);
+		});
+
+		global_event.forEach(function(item, index, arr){
+			addElemEventMethod(item);
+		});
+
+		function addElemEventMethod(item){
+			$_this[item] = function(fn){
+				if(fn && _G_TYPE.isFunction(fn)){
+					var _id = $_this.id;
+
+					var cur_fns = ((USER_DB.event.get(item))['callback'])[_id]['fns'];
+
+					cur_fns.push(fn);
+				}
+			};
+		}
+
+		return $_this;
+	}
+
+	// 事件处理
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// 动画名字列表
+	function AninationName(){
+		return [
+			'toLeft',
+			'toRight',
+			'toTop',
+			'toBottom',
+			'to',
+
+		];
+	}
+
+	// 动画处理
+	function Animation(){
+		var animation_id = null;
+		var _this = this;
+
+		this.frame_counter = 0;
+
+		function animationQueue(){
+			_this.frame_counter++;
+
+			// 清空画布
+			USER_CASE.clear();
+
+			var list = USER_DB.animate.all();
+			var cur_queue = null;
+			var cur_obj = null;
+
+			for(name in list){
+				cur_queue = list[name]['queue'];
+				cur_obj = USER_DB.element.getById(name);
+
+				cur_queue.forEach(function(item, index, arr){
+					// 更新元素属性
+					item['fn_name'].apply(cur_obj ,item['params']);
+				});
+
+				// 重绘动画帧
+				cur_obj.draw();
+			}
+
+			cur_queue = null;
+		}
+
+		// 开始执行动画
+		this.start = function(){
+			// 开始
+			animation_id = requestAnimationFrame(animationQueue);
+		};
+
+		// 停止动画
+		this.stop = function(){
+			cancelAnimationFrame(animation_id);
+		};
+	}
+	// 
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// 离屏canvas
+	// 用离屏canvas保存快照
+	function OffsetCanvas(w, h){
+		var o_canvas = _G_TOOL.createCanvas(w, h);
+		var o_ctx = o_canvas.getContext('2d');
+
+		this._canvas = o_canvas;
+		this._ctx = o_ctx;
+		this._width = o_canvas.width;
+		this._height = o_canvas.height;
+
+	}
+
+	// 单个快照
+	// 放在这里只用声明一次
+	// 如果放在dom的方法里面，则每次调用都需要重新声明一次
+	function SnapShoot(){
+		var a_snap_shoot = new OffsetCanvas(USER_CASE.width, USER_CASE.height);
+		a_snap_shoot._ctx.drawImage(USER_CASE.canvas, 0, 0, USER_CASE.width, USER_CASE.height);
+
+		// 创建快照的时间
+		this.timeStamp = (new Date()).getTime();
+		this.snapData = a_snap_shoot;// 快照就是这个离屏canvas
+		this.id = _G_KEY.getKey('snapshoot');
+		this.width = a_snap_shoot._width;
+		this.height =a_snap_shoot._height;
+
+
+		// 向数据库中保存快照：只一个图？
+		// 可以保存状态，所有的内容
+		// 包括当前canvas中的元素
+		USER_DB.snapshoot.add(a_snap_shoot);
+	}
+
+	// 
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
 
 	// div的路径
 	// 顺序为：上，右，下，左
@@ -521,23 +963,23 @@
 		};
 
 		this.getVertex = function(){
-			return _TOOL.deepClone(vertex);
+			return _G_TOOL.deepClone(vertex);
 		};
 
 		this.getTopLine = function(){
-			return _TOOL.deepClone(edge_top_line);
+			return _G_TOOL.deepClone(edge_top_line);
 		}
 
 		this.getRightLine = function(){
-			return _TOOL.deepClone(edge_right_line);	
+			return _G_TOOL.deepClone(edge_right_line);	
 		};
 
 		this.getBottomLine = function(){
-			return _TOOL.deepClone(edge_bottom_line);
+			return _G_TOOL.deepClone(edge_bottom_line);
 		}
 
 		this.getLeftLine = function(){
-			return _TOOL.deepClone(edge_left_line);
+			return _G_TOOL.deepClone(edge_left_line);
 		};
 
 		// 返回三个点
@@ -617,6 +1059,8 @@
 	function DIV(obj, show_text){
 		var _obj = obj || {};
 		var _inner_text = show_text;
+		var _this = this;
+
 		// 功能
 		// 解析css：边框，背景，尺寸，内容，子元素
 		// 动画，交互
@@ -639,19 +1083,16 @@
 		this.style = _style;
 
 		// 影响整个div的样式属性
-		var effective_style = {
-			width: _style['width'],
-			height: _style['height'],
-			left: _style['left'],
-			top: _style['top'],
-			borderWidth: _style['borderWidth'],// 影响尺寸
-			borderRadius: _style['borderRadius'],// 影响样式
-			padding: _style['padding'],// 影响尺寸
-		};
+		// 主要是尺寸和位置
+		
+		var effective_style = getEffectStyle(_style);
 
+		// 把属性单独存数据库如何？
+		// 
 		this.id = '';
 		this.klass = '';
 		this.innerText = show_text || '';
+
 		// 属性
 		this.attr = {};
 
@@ -663,70 +1104,6 @@
 
 		// 兄弟元素
 		this.siblings = [];
-
-
-
-		// 全局分析
-		// 绘制顺序
-		// 绘制
-		// div的绘制方法是一样的
-		// 绘制顺序确定好之后在绘制，只用确定同级元素的绘制顺序
-
-
-
-		// 过滤用户传递进来的css样式内容
-		// function CssFilter(){}
-		// 
-		// 
-		// 如果有兄弟元素，则，根据zIndex分析兄弟元素的绘制顺序
-		// 绘制顺序：如果小于0，则不绘制，分析所有兄弟元素的css样式，确定定位方法，是float定位还是position定位
-		// 解析各兄弟元素的位置
-		// 绘制
-
-		// style规则
-		// 不存在before，after伪元素
-		// 如果有position属性，则忽略float相关属性
-		// 尺寸和长度单位一律用像素，百分比一律是相对于父元素
-		// 定位的位置，一律是相对于父元素的左上角（0,0）的位置
-		// 对于用户传递的参数，如果不属于可用的属性，则忽略
-		// 
-		// 
-		// 
-		// 
-
-
-
-		// this.style = {
-		// 	width: 0,						// 宽度：确定元素的宽度，默认为0，如果为0，则不绘制
-		// 	height: 0,						// 高度：同宽度
-		// 	left: 0,						// left值，默认为0
-		// 	top: 0,							// top值，默认为0
-		// 	zIndex: 0,						// 所有默认为0
-		// 	float: 'none',
-		// 	borderLeft: '',
-		// 	borderTop: '',
-		// 	borderRight: '',
-		// 	borderBottom: '',
-		// 	borderTopLeftRadius: '',
-		// 	borderTopRightRadius: '',
-		// 	borderBottomLeftRadius: '',
-		// 	borderBottomRightRadius: '',
-		// 	paddingLeft: '',
-		// 	paddingTop: '',
-		// 	paddingBottom: '',
-		// 	paddingRight: '',
-		// 	backgroundColor: '',
-		// 	backgroundImage: '',
-		// 	backgroundPosition: '',
-		// 	backgroundRepeat: '',
-		// 	outlineStyle: '',// 轮廓线
-		// 	outlineColor: '',
-		// 	outlineWidth: '',
-		// 	overflow: 'hidden'				// hidden // 对于当前绘制的div，使用clip，将绘制内容限制在此区域内
-
-		// };
-		// 
-		
 
 		// 该元素的绝对位置：相对于canvas左上角的位置
 		this.absolute = function(){
@@ -751,20 +1128,38 @@
 
 		// 范围：边框和内容的范围
 		this.range = function(){
-
+			return {
+				min: {
+					x: 0,
+					y: 0
+				},
+				max: {
+					x: 45,
+					y: 89
+				}
+			}
 		};
 
 		// 所占的区域：返回一个路径
 		this.area = function(){
-
+			
 		};
 
 		// 参数是一个点
 		// 判断该点是否在这个div区域内
 		// 用以确定事件是否在该div区域内
-		this.pointIn = function(x, y){
-			return false;
-			return true;
+		this.pointInArea = function(x, y){
+			var _path = new DivPath(USER_CASE.ctx, effective_style);
+
+			// 创建路径
+			// 创建背景区域
+			_path.createPath();
+
+			if(USER_CASE.ctx.isPointInPath(x, y)){
+				return true;
+			}else{
+				return false;
+			}
 		};
 
 		// function 
@@ -773,7 +1168,7 @@
 		this.draw = function(){
 			// 准备工作结束以后
 			// 将这个div绘制出来
-			var _DRAW = new DRAW();
+			var _DRAW = new DRAW(effective_style);
 
 			// 画出来
 			_DRAW.render(this.style, _inner_text);
@@ -841,14 +1236,58 @@
 
 		};
 
-		// 事件
-		this.on = function(type, fn){};
+		// 在该元素上添加事件相关方法
+		AddEventMethod(_this);
+		
+		function getEffectStyle(_style){
+			var effective_style = {
+				width: _style['width'],
+				height: _style['height'],
+				left: _style['left'],
+				top: _style['top'],
+				// borderWidth: _style['borderWidth'],// 影响尺寸
+				// borderRadius: _style['borderRadius'],// 影响样式
+				// padding: _style['padding'],// 影响尺寸
+			};
 
-		// // 点击事件
-		// this.click = function(fn){};
+			// 基本位置
+			var w = _style.width;
+			var h = _style.height;
+			var x = _style.left;
+			var y = _style.top;
+
+			var radius = _style['borderRadius'] || 0;
+
+			// 确定div的圆角
+			if(w > h){
+				var half_h = h/2;
+				if(radius >= half_h){
+					// 圆角大于h
+					radius = half_h;
+				}
+			}else{
+				var half_w = w/2;
+				if(radius >= half_w){
+					radius = half_w;
+				}
+			}
+
+			_style['borderRadius'] = radius;
+			effective_style['borderRadius'] = radius;
+
+			var borderWidth = _style['borderWidth'] || 0;
+			_style['borderWidth'] = borderWidth;
+			effective_style['borderWidth'] = borderWidth;
+
+			if(_style['padding'] < 0){
+				_style['padding'] = 0;
+				effective_style['padding'] = 0;
+			}
+
+			return effective_style;
+		}
 	}
 
-	
 	// 构造函数
 	function DOM(canvas){
 		this.canvas = canvas;
@@ -856,13 +1295,38 @@
 		this.width = canvas.width;
 		this.height = canvas.height;
 
+		// 开始时间
+		this.start_time = (new Date()).getTime();
+
+		// 截止到现在，运行了多长时间
+		this.sofar = function(){
+			return (new Date()).getTime() - this.start_time;
+		};
+
+		// 当运行milisec的时候执行函数fn
+		this.when = function(fn, milisec){
+
+		};
+
+		// 全局动画
+
+		// 在canvas上添加事件
+		ELEM_ADD_EVENT(this.canvas);
+
 		// 用户实例
 		USER_CASE = this;
 
+		USER_A.start();
+
 		this.div = function(obj, txt){
+			var _div = new DIV(obj, txt);
+
+			// 向数据库中加入这个元素
+			USER_DB.element.add(_div);
+
 			// obj是css样式，txt是innerText，div的文字
 			// var _div = new DIV(obj, txt);
-			return new DIV(obj, txt);
+			return _div;
 		};
 
 		// 创建无序列表
@@ -873,37 +1337,25 @@
 
 		// 图片元素
 		this.img = function(src){};
+
+		// 快照：目前仅仅支持保存一张图片
+		// 理想情况，不仅保存图片，还能保存获取快照的时刻所有元素的内容
+		// 在内部数据库中深克隆用户数据库
+		// 在用户数据库中保存内部数据库内容
+		this.snapshoot = function(){
+			var snap = new SnapShoot();
+
+			return snap;
+		};
+
+		// 清空画布
+		this.clear = function(){
+			this.canvas.clearRect(0, 0, this.width, this.height);
+		};
 	}
 
-	
-
-	// 设置绘图句柄的属性
-	// function SetCTXProperties(){
-	// 	var obj = {
-	// 		fillStyle: '',
-	// 		'filter': '',
-	// 		font: '',
-	// 		globalAlpha: '',
-	// 		lineCap: '',
-	// 		lineDashOffset: '',
-	// 		lineJoin: '',
-	// 		lineWidth: '',
-	// 		miterLimit: '',
-	// 		shadowBlur: '',
-	// 		shadowColor: '',
-	// 		shadowOffsetX: '',
-	// 		shadowOffsetY: '',
-	// 		strokeStyle: '',
-	// 		textAlign: '',
-	// 		textBaseline: '',
-	// 		globalCompositeOperation: '',
-	// 		imageSmoothingEnabled: true,
-	// 		imageSmoothingQuality: '',
-	// 	};
-	// }
-
 	// 单纯的画一个div
-	function DRAW(){
+	function DRAW(_base_info){
 		// 确定画法
 		var _ctx = USER_CASE.ctx;
 
@@ -1164,38 +1616,6 @@
 			var x = base_info.left;
 			var y = base_info.top;
 
-
-			// fontSize: '',		// 文字大小
-			// fontWeight: '',		// 文字粗细
-			// fontFamily: '',		// 字体
-			// fontStretch: '',	// 
-			// fontStyle: '',		// 
-			// unicodeRange: '',	// 
-			// textAlign: '',		// 对齐方式
-			// textDecoration: '',	// 文字装饰，下划线、删除线等等
-			// color: '',			// 文字颜色
-			// letterSpacing: '',	// 文字间距
-			// direction: '',		// 文字方向
-			// lineHeight: '',		// 行高
-			// textIndent: '',		// 
-			// textShadow: '',		// 文字阴影
-			// textTransform: '', 	// 文字变换
-			// verticalAlign: '', 	// 纵向
-			// whiteSpace: '',
-			// wordSpacing: '',
-			// textOverflow: '', 	// 文字溢出
-			// wordWrap: '',		// 自动换行
-			// wordBreak: '',		// 
-			// textShadow: ''
-
-			// font	设置或返回文本内容的当前字体属性
-			// textAlign	设置或返回文本内容的当前对齐方式
-			// textBaseline	设置或返回在绘制文本时使用的当前文本基线
-			// 方法	描述
-			// fillText()	在画布上绘制“被填充的”文本
-			// strokeText()	在画布上绘制文本（无填充）
-			// measureText()	返回包含指定文本宽度的对象
-			// 这些的设置应该在分析的过程中就设置好了
 			var font_family = textCss['fontFamily'] || '微软雅黑';
 			var font_color = textCss['color'] || '#000';
 			var font_size = textCss['fontSize'] || 16;
@@ -1214,19 +1634,9 @@
 		// 在canvas中显示内容,必须的css
 		this.render = function(css, show_text){// 去除单位之后的属性集合
 			_inner_text = show_text || '';
-			// 基本位置
-			var w = css.width;
-			var h = css.height;
-			var x = css.left;
-			var y = css.top;
 
 			// 相对于父元素
-			var base = {
-				left: css.left,
-				top: css.top,
-				width: css.width,
-				height: css.height
-			};
+			var base = _base_info;
 
 			// 过滤器
 			var _filter = new Colation(css);
@@ -1242,28 +1652,7 @@
 			// 轮廓相关样式
 			var _outline_css = _filter.outline();
 
-			var radius = _border_css['borderRadius'] || 0;
-
-			// 确定div的圆角
-			if(w > h){
-				var half_h = h/2;
-				if(radius >= half_h){
-					// 圆角大于h
-					radius = half_h;
-				}
-			}else{
-				var half_w = w/2;
-				if(radius >= half_w){
-					radius = half_w;
-				}
-			}
-
-			_border_css['borderRadius'] = radius;
-			base['borderRadius'] = radius;
-
-			var borderWidth = _border_css['borderWidth'] || 1;
-			_border_css['borderWidth'] = borderWidth;
-			base['borderWidth'] = borderWidth;
+			
 
 			// 画阴影
 			shadow(_boxshadow_css, base);
@@ -1288,7 +1677,7 @@
 
 		// 过滤原始数据，保留有用数据
 		function deal(original_data, filter_data){
-			if(original_data && !_TYPE.isEmptyObject(original_data)){
+			if(original_data && !_G_TYPE.isEmptyObject(original_data)){
 				var obj = {};
 
 				for(var name in original_data){
@@ -1303,26 +1692,6 @@
 			}
 		}
 
-		// 将参数对象合并成一个对象
-		function combineObject(){
-			var len = arguments.length;
-			var obj = {};
-
-			var temp_obj = null;
-
-			for(var i = 0; i < len; i++){
-				temp_obj = arguments[i];
-
-				if(_TYPE.isObject(temp_obj)){
-					for(var name in temp_obj){
-						obj[name] = temp_obj[name];
-					}
-				}
-			}
-
-			return obj;
-		}
-
 		this.getResult = function(){
 			var _base = this.base();
 			var _box_shadow = this.boxShadow();
@@ -1332,7 +1701,7 @@
 			var _text = this.text();
 
 			// 合并这几个样式
-			return combineObject(_base, _box_shadow, _background, _border, _outline, _text);
+			return _G_TOOL.combineObject(_base, _box_shadow, _background, _border, _outline, _text);
 		};
 
 		// 基本样式：尺寸和位置
@@ -1470,7 +1839,7 @@
 	function formatCss(obj){
 		// var rgba = /^rgba\([0-2][0-9][0-9]\,\)/;
 
-		if(obj && _TYPE.isObject(obj)){
+		if(obj && _G_TYPE.isObject(obj)){
 			for(var name in obj){
 				// 遍历每个值，并处理每个值
 				var cur_value = obj[name];
@@ -1487,329 +1856,5 @@
 	}
 
 	window.DOM = DOM;
+	window.user_db = USER_DB;
 })();
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// function drawDiv(ctx, obj){
-// 	if(obj){
-// 		// 不包括边框的矩形范围
-// 		createDivPath(ctx, obj);
-// 		ctx.stroke();
-
-// 		// 边框宽度为10
-// 		// 边框中心线
-// 		ctx.save();
-// 		ctx.lineWidth = 10;
-
-// 		var dotCanvas = document.createElement('canvas');
-// 		dotCanvas.width = 10;
-// 		dotCanvas.height = 10;
-// 		var dotCtx = dotCanvas.getContext('2d');
-// 		// dotCtx.strokeStyle = '#ff0000';
-// 		dotCtx.arc(5.5, 5.5, 5, 0, Math.PI * 2, true);
-// 		dotCtx.stroke();
-
-// 		ctx.strokeStyle = ctx.createPattern(dotCanvas, 'repeat');
-
-// 		createDivPath(ctx, {
-// 			width: obj.width + 10,
-// 			height: obj.height + 10,
-// 			left: obj.left - 10/2,
-// 			top: obj.top - 10/2,
-// 			borderRadius: obj.borderRadius
-// 		});
-
-// 		// switch(borderStyle){
-// 		// 	case 'solid':
-// 		// 		solidBorder();
-// 		// 		break;
-// 		// 	case 'dashed':
-// 		// 		dashedBorder();
-// 		// 		break;
-// 		// }
-
-// 		ctx.stroke();
-// 		ctx.restore();
-// 		// 根据这个绘制边框
-
-// 		// div范围边线
-// 		// 带边框的
-// 		// 根据这部分绘制背景
-// 		createDivPath(ctx, {
-// 			width: obj.width + 10 * 2,
-// 			height: obj.height + 10 * 2,
-// 			left: obj.left - 10,
-// 			top: obj.top - 10
-// 		});
-
-// 		// ctx.stroke();
-// 	}
-// }
-
-
-
-
-// 创建div的绘制路径
-// function createDivPath(ctx, baseObj){
-// 	if(baseObj){
-// 		var w = baseObj.width;
-// 		var h = baseObj.height;
-// 		var x = baseObj.left;
-// 		var y = baseObj.top;
-
-// 		// 数值：3,4,5，,5，之类的
-// 		var radius = baseObj.borderRadius || 0;
-
-// 		// 四个顶点
-// 		var l_t_x = x;
-// 		var l_t_y = y;
-
-// 		var r_t_x = x + w;
-// 		var r_t_y = y;
-
-// 		var r_b_x = x + w;
-// 		var r_b_y = y + h;
-
-// 		var l_b_x = x;
-// 		var l_b_y = y + h;
-
-// 		// 确定矩形的圆角
-// 		if(w > h){
-// 			var half_h = h/2;
-// 			if(radius >= half_h){
-// 				// 圆角大于h
-// 				radius = half_h;
-// 			}
-// 		}else{
-// 			var half_w = w/2;
-// 			if(radius >= half_w){
-// 				radius = half_w;
-// 			}
-// 		}
-
-// 		// 顶边
-// 		var line_t_left_x = x + radius;
-// 		var line_t_left_y = y;
-
-// 		var line_t_right_x = x + w - radius;
-// 		var line_t_right_y = y;
-
-// 		// 右边
-// 		var line_r_top_x = x + w;
-// 		var line_r_top_y = y + radius;
-
-// 		var line_r_bottom_x = x + w;
-// 		var line_r_bottom_y = y + h - radius;
-
-// 		// 底边
-// 		var line_b_right_x = x + w - radius;
-// 		var line_b_right_y = y + h;
-
-// 		var line_b_left_x = x + radius;
-// 		var line_b_left_y = y + h;
-
-// 		// 左边
-// 		var line_l_bottom_x = x;
-// 		var line_l_bottom_y = y + h - radius;
-
-// 		var line_l_top_x = x;
-// 		var line_l_top_y = y + radius;
-
-
-// 		ctx.beginPath();
-
-// 		function topBorder(){
-// 			// 开始绘画
-// 			// 顶边
-// 			ctx.moveTo(line_t_left_x, line_t_left_y);
-// 			ctx.lineTo(line_t_right_x, line_t_right_y);
-// 		}
-
-// 		function topRightRadius(){
-// 			// ctx.moveTo(line_t_right_x, line_t_right_y);
-
-// 			// 上-右
-// 			ctx.arcTo(r_t_x, r_t_y, line_r_top_x, line_r_top_y, radius);
-// 		}
-
-// 		function rightBorder(){
-// 			// 右边
-// 			ctx.lineTo(line_r_top_x, line_r_top_y);
-// 			ctx.lineTo(line_r_bottom_x, line_r_bottom_y);
-// 		}
-
-// 		function bottomRightRadius(){
-// 			// ctx.moveTo(line_r_bottom_x, line_r_bottom_y);
-// 			// 右-底
-// 			ctx.arcTo(r_b_x, r_b_y, line_b_right_x, line_b_right_y, radius);
-// 		}
-
-// 		function bottomBorder(){
-
-// 			// 底边
-// 			ctx.lineTo(line_b_right_x, line_b_right_y);
-// 			ctx.lineTo(line_b_left_x, line_b_left_y);
-// 		}
-
-// 		function bottomLeftRadius(){
-// 			// ctx.moveTo(line_b_left_x, line_b_left_y);
-// 			// 底-左
-// 			ctx.arcTo(l_b_x, l_b_y, line_l_bottom_x, line_l_bottom_y, radius);
-// 		}
-
-// 		function leftBorder(){
-
-// 			// 左边
-// 			ctx.lineTo(line_l_bottom_x, line_l_bottom_y);
-// 			ctx.lineTo(line_l_top_x, line_l_top_y);
-// 		}
-
-// 		function topLeftRadius(){
-// 			// ctx.moveTo(line_l_top_x, line_l_top_y);
-// 			// 左-上
-// 			ctx.arcTo(l_t_x, l_t_y, line_t_left_x, line_t_left_y, radius);	
-// 		}
-
-// 		topBorder();
-// 		topRightRadius();
-// 		rightBorder();
-// 		bottomRightRadius();
-// 		bottomBorder();
-// 		bottomLeftRadius();
-// 		leftBorder();
-// 		topLeftRadius();
-
-// 		ctx.closePath();
-// 	}
-// }
-
-
-
-// 盒子模型
-
-
-// 基本的样式：尺寸和位置
-// function DrawBorder(ctx, base_style, border_style){
-// 	// base_style:确定尺寸和位置
-// 	// border_style:确定边框样式
-// 	// 
-// 	// borderWidth
-// 	// borderStyle
-// 	// borderColor
-// 	// borderRadius
-// 	// borderImage
-// 	// 
-// 	// 
-// 	// 默认值
-// 	var _Border_Style = new BorderStyle(ctx);
-// 	ctx.save();
-// 	if(border_style in _Border_Style){
-// 		// 确定路径
-// 		var all_path = _Border_Style[border_style]();
-// 	}
-// 	ctx.restore();
-// }
-
-// 确定各种边框样式的路径
-// 单独绘制还是确定好路径后再进行绘制？
-// function BorderStyle(ctx){
-// 	var _ctx = ctx;
-// 	// 
-// 	// 点：间隔相同的点
-// 	this.dotted = function(){
-// 		var obj = {
-// 			data: [{
-// 				x: 3,
-// 				y: 3,
-// 				r: 3
-// 			}],
-// 			path: function(obj){
-// 				_ctx.beginPath();
-// 				_ctx.arc(obj.x, obj.y, obj.r, 0, Math.PI * 2, true);
-// 				_ctx.closePath();
-// 			}
-// 		};
-
-// 		// 确定数据obj.data
-// 		// 用path方法确定路径
-// 		// 绘制
-
-// 		// 路径列表
-// 		return obj;
-// 	};
-// 	// 短横线
-// 	this.dashed = function(){
-// 		var obj = {
-// 			data: [{
-// 				x1: 45,
-// 				y1: 45,
-// 				x2: 34,
-// 				y2: 88
-// 			}],
-// 			path: function(obj){
-// 				_ctx.beginPath();
-// 				_ctx.moveTo(obj.x1, obj.y1);
-// 				_ctx.lineTo(obj.x2, obj.y2);
-// 				_ctx.closePath();
-// 			}
-// 		};
-
-// 		// 路径列表
-// 		return obj;
-// 	};
-// 	this.solid = function(){
-// 		// 确定四个点，确定四条线
-// 		return this.dashed();
-// 	};
-// 	this.double = function(){
-// 		var path_list = [];
-// 		ctx.beginPath();
-// 		ctx.closePath();
-// 		// 路径列表
-// 		return path_list;
-// 	};
-// 	this.groove = function(){
-// 		var path_list = [];
-// 		ctx.beginPath();
-// 		ctx.closePath();
-// 		// 路径列表
-// 		return path_list;
-// 	};
-// 	this.ridge = function(){
-// 		var path_list = [];
-// 		ctx.beginPath();
-// 		ctx.closePath();
-// 		// 路径列表
-// 		return path_list;
-// 	};
-// 	this.inset = function(){
-// 		var path_list = [];
-// 		ctx.beginPath();
-// 		ctx.closePath();
-// 		// 路径列表
-// 		return path_list;
-// 	};
-// 	this.outset = function(){
-// 		var path_list = [];
-// 		ctx.beginPath();
-// 		ctx.closePath();
-// 		// 路径列表
-// 		return path_list;
-// 	};
-// }
-
-// 绘制矩形和圆角矩形很容易
-// 绘制背景
-// 绘制边框
-// 轮廓线
-// 有弧度的圆点曲线

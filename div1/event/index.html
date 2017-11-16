@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>事件</title>
+	<style type="text/css">
+		#click_elem{
+			width: 600px;
+			height: 600px;
+		}
+	</style>
+</head>
+<body>
+	<div id="click_elem"></div>
+
+	<script type="text/javascript">
+		var elem = document.getElementById('click_elem');
+		elem.onclick = function(e){
+			console.log(e);
+		};
+
+
+
+		document.onclick = function(e){
+			console.log(e);
+		}
+
+		document.onkeydown = function(e){
+			console.log(e);
+		}
+	</script>
+</body>
+</html>
