@@ -318,11 +318,16 @@
 		var _index = [];
 
 		this.add = function(data){
-			var _id = id in data && data.id.length > 0 && data.id || false;
+			var _id = ('id' in data) && data['id'].length > 0 && data['id'] || false;
 			var id = null;
 
 			if(_id){
 				id = _id;
+
+				// 如果从记录中找到了该 id的记录，则不添加，直接返回ID
+				if(this.has(id)){
+					return id;
+				}
 			}else{
 				id = _G_KEY.getKey(this.name);
 			}
@@ -390,6 +395,12 @@
 				// 不存在data中
 				return false;
 			}
+		};
+
+		// 是否存在id为id的数据
+		this.has = function(id){
+			// 如果找到了id的记录
+			return !!this.getById(id);
 		};
 
 		this.modify = function(id, newData){
@@ -637,13 +648,13 @@
 			var event_nameval = _event.type;
 
 			// 读取事件队列里面的内容
-			var callbacks = (USER_DB.event.get(item))['callback'];
+			var callbacks = (USER_DB.event.getById(item))['callback'];
 
 			for(var name in callbacks){
 				var elem_id = name;
 
 				var elem_obj = USER_DB.element.getById(elem_id);
-				var fn_list = callbacks[name];
+				var fn_list = callbacks[name]['fns'];
 
 				if(_G_TYPE.isKeyBoardEventName(event_nameval)){
 
@@ -659,7 +670,7 @@
 					var x = _event.x;
 					var y = _event.y;
 
-					if(elem_obj.isPointInArea(x, y)){
+					if(elem_obj.pointInArea(x, y)){
 						fn_list.forEach(function(item, index, arr){
 							if(item && _G_TYPE.isFunction(item)){
 								item.call(elem_obj, _event);
@@ -675,18 +686,21 @@
 
 	// 在元素上添加事件方法
 	// 传递一个对象
-	function AddEventMethod($_this){
+	function AddEventMethod(){
+		var _this = this;
+		
 		// 事件
-		$_this.on = function(type, fn){
+		this.on = function(type, fn){
 			// 添加事件
 			// _this[type]
 			if(_G_TYPE.isEventName(type)){
 				// 如果是事件的名字
 				if(fn && _G_TYPE.isFunction(fn)){
-					$_this[type](fn);
+					this[type](fn);
 				}
 			}
 		};
+		
 
 		// 事件函数
 		var event_list = EVENT_LIST();
@@ -701,19 +715,33 @@
 			addElemEventMethod(item);
 		});
 
+
 		function addElemEventMethod(item){
-			$_this[item] = function(fn){
+			_this[item] = function(fn){
+				console.log('好吧');
 				if(fn && _G_TYPE.isFunction(fn)){
-					var _id = $_this.id;
+					var _id = _this.id;
 
-					var cur_fns = ((USER_DB.event.get(item))['callback'])[_id]['fns'];
-
-					cur_fns.push(fn);
+					addEventFns(item, _id, fn);
 				}
 			};
 		}
 
-		return $_this;
+		return this;
+	}
+
+	function addEventFns(event_type, elem_id, fn){
+		// ((USER_DB.event.getById(item))['callback'])[_id]['fns'];
+		// 事件列表
+		var callback_list = (USER_DB.event.getById(event_type))['callback'];
+		if(elem_id in callback_list){
+			callback_list[elem_id]['fns'].push(fn);
+		}else{
+			callback_list[elem_id] = {
+				id: elem_id,
+				fns: [fn]
+			};
+		}
 	}
 
 	// 事件处理
@@ -755,9 +783,15 @@
 
 			// 遍历所有元素，并重新绘制
 			var list = USER_DB.element.all();
+
 			for(name in list){
-				// 重绘动画帧(所有元素)
-				list[name].draw();
+				var is_root = !list[name].parent;
+				// 如果是根元素，才画出来
+				// 如果不是根元素，则不画,在根元素的绘制方法里面，已经调用了子元素的绘制方法
+				// 如果是根元素，并且没有隐藏，则绘出来
+				if(is_root && !list[name].isHidden()){
+					list[name].draw();
+				}
 			}
 
 			animation_id = requestAnimationFrame(animationQueue);
@@ -1043,7 +1077,13 @@
 		this.snapData = a_snap_shoot;// 快照就是这个离屏canvas
 		this.id = _G_KEY.getKey('snapshoot');
 		this.width = a_snap_shoot._width;
-		this.height =a_snap_shoot._height;
+		this.height = a_snap_shoot._height;
+
+		// 将快照生成图片
+		this.img = function(type){
+			var _type_val = 'image/' + type;
+			return a_snap_shoot._canvas.toDataURL();
+		}
 
 
 		// 向数据库中保存快照：只一个图？
@@ -1304,11 +1344,42 @@
 
 	// div对象
 	function DIV(obj, show_text){
+		// 位置参考点为左上角
+		// 旋转，缩放参考点为矩形中心点
+		// 
 		var _obj = obj || {};
 		var _inner_text = show_text;
+
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+		var _cur_div_hide = false;
+
+		this.hide = function(){
+			_cur_div_hide = true;
+			return this;
+		};
+
+		this.show = function(){
+			_cur_div_hide = false;
+			return this;
+		};
+
+		// 是否隐藏
+		this.isHidden = function(){
+			return _cur_div_hide;
+		};
+
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+
+
 		var _this = this;
 
-		var _id_value = _G_KEY.getKey();
+		var _id_value = _G_KEY.getKey('element');
 
 		// 把属性单独存数据库
 		// 属性相关内容
@@ -1317,9 +1388,53 @@
 		});
 
 		// 操作属性
+		// 一个或者两个参数
+		// 一个字符串参数表示获取属性值
+		// 一个对象参数表示设置属性值
 		this.attr = function(){
+			var len = arguments.length;
+			var attr_obj = USER_DB.attribute.getById(_id_value);
 
+			if(len === 0){
+				return this;
+			}
+
+			if(len <= 2){
+				if(len === 1){
+					if(_G_TYPE.isString(arguments[0])){
+						// 读取属性
+						if(arguments[0] in attr_obj){
+							return attr_obj[arguments[0]];
+						}else{
+							return this;
+						}
+					}else if(_G_TYPE.isObject(arguments[0])){
+						// 设置属性
+
+						for(name in arguments[0]){
+							attr_obj[name] = arguments[0][name];
+						}
+
+						return this;
+					}
+				}else if(len === 2){
+					if(_G_TYPE.isString(arguments[0])){
+						// 设置属性
+						attr_obj[arguments[0]] = arguments[1];
+
+						return this;
+					}else{
+						return this;
+					}
+				}
+			}
 		};
+
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+		// ----------------------------------
+
 
 		// 样式相关内容
 
@@ -1333,9 +1448,9 @@
 		// 将五花八门的css样式，设置成统一的内容
 		// 供后续处理
 		var _PARSE = new Colation(_obj);
-
 		// 获取到未统一的数据格式
 		var _css = _PARSE.getResult();
+
 
 		// 相对于父元素的位置
 		// 格式化样式:缺少基本尺寸
@@ -1353,8 +1468,8 @@
 		this.klass = '';
 		this.innerText = show_text || '';
 
-		
-
+		// 层级
+		this.layer = 1;
 
 		// 父元素
 		this.parent = null;
@@ -1365,25 +1480,24 @@
 		// 兄弟元素
 		this.siblings = [];
 
-
 		// 该元素的绝对位置：相对于canvas左上角的位置
 		this.absolute = function(){
 			var _parent = this.parent && this.parent.absolute() || {
-				x: 0,
-				y: 0
+				left: 0,
+				top: 0
 			};
 
 			return {
-				x: _parent.x + this.style.x,
-				y: _parent.y + this.style.y
+				left: _parent.left + this.style.left,
+				top: _parent.top + this.style.top
 			};
 		};
 
 		// 该元素的相对位置：相对父元素的位置
 		this.relative = function(){
 			return {
-				x: this.style.x,
-				y: this.style.y
+				left: this.style.left,
+				top: this.style.top
 			}
 		};
 
@@ -1423,25 +1537,31 @@
 			}
 		};
 
-		// function 
-
 		// 绘制这个div
 		this.draw = function(){
-			// 准备工作结束以后
-			// 将这个div绘制出来
-			var _DRAW = new DRAW(effective_style);
+			if(!_cur_div_hide){
+				// 准备工作结束以后
+				// 将这个div绘制出来
+				var _DRAW = new DRAW(effective_style);
 
-			// 画出来
-			_DRAW.render(this.style, _inner_text);
+				// 画出来
+				_DRAW.render(this.style, _inner_text);
 
-			// 画完了，确定子元素
-			if(this.children.length !== 0){
-				console.log('画子元素');
-				// 分析子元素的层次关系
-				// 排序
-				// 绘制
-			}else{
-				console.log('没有子元素可画');
+				var child_arr = _this.children;
+				var child_len = child_arr.length;
+
+				// 画完了，确定子元素
+				if(child_len !== 0){
+					// 根据层次排序
+					child_arr.sort(function(a, b){
+						return a.layer - b.layer;
+					});
+
+					child_arr.forEach(function(item, index, arr){
+						// 将子元素绘出来
+						item.draw();
+					});
+				}
 			}
 
 			return this;
@@ -1454,8 +1574,12 @@
 			// 设置这个元素的父元素
 			other_div.parent = this;
 
-			var len = this.children;
+			var len = this.children.length;
 			var temp_div = null;
+
+			// 正常情况下，层次是按照顺序来的
+			// 兄弟元素有几个，层级就是几
+			other_div.layer = len;
 
 			// 在子元素的兄弟元素中加入这个元素
 			for(var i = 0; i < len; i++){
@@ -1472,7 +1596,27 @@
 		this.remove = function(){
 			// 移除当前这个div
 			// 从数据库中删除该div
-			// 更新画布
+			var new_sibilngs = [];
+			this.siblings.forEach(function(item, index, arr){
+				if(item.id !== _id_value){
+					new_sibilngs.push(item);
+				}
+			});
+
+			this.siblings = new_sibilngs();
+
+			// 删除父元素中这个子元素
+			var parent_children = this.parent.children;
+			var new_parent_children = [];
+
+			parent_children.forEach(function(item, index, arr){
+				if(item.id !== _id_value){
+					new_parent_children.push(item);
+				}
+			});
+
+			this.parent.children = new_parent_children;
+
 			USER_DB.element.del(_id_value);
 
 			return this;
@@ -1486,19 +1630,7 @@
 		// };
 
 		// 移动
-		this.to = function(x_dis, y_dis){};
-
-		// 向左移动
-		this.toLeft = function(dis){};
-
-		// 向右
-		this.toRight = function(dis){};
-
-		// 向上
-		this.toTop = function(dis){};
-
-		// 向下
-		this.toBottom = function(dis){};
+		this.to = function(x_dis, y_dis, miliSec){};
 
 		// 动画
 		this.animate = function(cssObj, miliSec, fn){
@@ -1506,7 +1638,7 @@
 		};
 
 		// 在该元素上添加事件相关方法
-		AddEventMethod(_this);
+		AddEventMethod.call(_this);
 		
 		function getEffectStyle(_style){
 			var effective_style = {
@@ -1614,7 +1746,6 @@
 			_this.ctx.clearRect(0, 0, this.width, this.height);
 		};
 
-		// 全局动画
 
 		// 在canvas上添加事件
 		ELEM_ADD_EVENT(this.canvas);
@@ -1622,6 +1753,7 @@
 		// 用户实例
 		USER_CASE = this;
 
+		// 全局动画
 		USER_A.start();
 	}
 

@@ -248,3 +248,40 @@ event_list = {
 		}
 	},
 };
+
+
+var o = {
+	id: 2,
+	name: '3fdsaf'
+};
+
+var o1 = {
+	id: 3,
+	name: 'fdf'
+}
+
+var o2 = {
+	id: 4,
+	name: 'ggg'
+};
+
+var o3 = {
+	id: 5,
+	name: 'rrrr'
+};
+
+var o4 = {
+	id: 6,
+	name: 'gghhh'
+};
+
+var o5 = {
+	id: 7,
+	name: 'ghhhh'
+};
+
+var arr = [o3, o2, o4, o5, o1, o];
+
+var arr1 = arr.sort(function(a, b){
+	return a.id - b.id;
+});

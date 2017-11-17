@@ -28,7 +28,7 @@
 		// 创建一个div
 		var a_div = d.div({
 			width: 120,
-			height: 300,
+			height: 150,
 			left: 30,
 			top: 50,
 			borderRadius: 30,
@@ -36,8 +36,46 @@
 			borderStyle: 'solid'
 		}, '你们好');
 
+		// 我都不知道她为什么会这样
+		// 为什么给出的路径会这么神奇？
+		var a_div1 = d.div({
+			// 为什么会这样
+			width: 40,
+			height: 50,
+			left: 60,
+			top: 130,
+			borderRadius: 20,
+			borderWidth: 1,
+			borderStyle: 'solid'
+		}, '子元素');
+
+		a_div.append(a_div1);
+
 		// 将这个div画出来
 		a_div.draw();
+
+		a_div.click(function(){
+			console.log('hello world');
+		});
+
+		// a_div.click(function(e){
+		// 	console.log(e);
+		// 	console.log('咋的啦，找事');
+		// 	console.log(this);
+		// });
+
+
+		var a_div2 = d.div({
+			width: 40,
+			height: 50,
+			left: 260,
+			top: 230,
+			borderRadius: 20,
+			borderWidth: 1,
+			borderStyle: 'solid'
+		}, '另一个元素');
+
+		a_div2.draw();
 
 
 
