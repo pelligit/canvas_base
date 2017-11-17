@@ -11,6 +11,9 @@
 	// 唯一的键
 	var _G_KEY = new KEY();
 
+	// 动画曲线
+	var _G_EASE = new EaseEffectLine();
+
 	// 用户实例
 	var USER_CASE = null;
 
@@ -21,9 +24,15 @@
 	var USER_DB = new DATABASE();
 
 	// 初始化用户数据表
-	USER_DB.init(['animate', 'event', 'element', 'snapshoot']);
+	// animate是保存动画队列的表
+	// event是保存事件堆栈的表
+	// element是保存所有的元素
+	// snapshoot是保存系统快照的表
+	// style是每个元素绘制时候依赖的样式表【绘制该元素时候依赖的样式表属性】
+	// attribute表是保存每个元素的属性表，对应元素的属性操作相关内容。【元素属性可以保存附加数据内容】
+	USER_DB.init(['animate', 'event', 'element', 'snapshoot', 'style', 'attribute']);
 
-	// 内部使用的数据库
+	// 内部使用的数据库，暂时没有用到
 	var INNER_DB = new DATABASE();
 
 	// -------------------------------------------------------------
@@ -237,6 +246,17 @@
 
 			return obj;
 		};
+
+		// 获取当前的时间戳
+		this.timeStamp = function(){
+			return (new Date()).getTime();
+		};
+		
+
+		// 距离start_time, 持续了多久
+		this.continued = function(start_time){
+			return this.timeStamp() - start_time;
+		};
 	}
 
 	// -------------------------------------------------------------
@@ -253,7 +273,7 @@
 
 		// 唯一的key，类型，时间戳和随机6位字母组合
 		this.getKey = function(type){
-			return type + '_' + this.getCurTimestamp() + '_' + this.getLetters(6);			
+			return type + '_' + _G_TOOL.timeStamp() + '_' + this.getLetters(6);			
 		};
 
 		// 获取随机的字母组合，
@@ -270,11 +290,6 @@
 			}
 
 			return arr.join('');
-		};
-
-		// 获取当前的时间戳
-		this.getCurTimestamp = function(){
-			return (new Date()).getTime();
 		};
 	}
 
@@ -675,7 +690,7 @@
 
 		// 事件函数
 		var event_list = EVENT_LIST();
-		var obj_event = event_list['canvas_event'];
+		var obj_event = event_list['elem_event'];
 		var global_event = event_list['doc_event'];
 
 		obj_event.forEach(function(item, index, arr){
@@ -725,6 +740,9 @@
 		var animation_id = null;
 		var _this = this;
 
+		// 动画初始化的时间
+		var initial_time = _G_TOOL.timeStamp();
+
 		this.frame_counter = 0;
 
 		function animationQueue(){
@@ -733,35 +751,264 @@
 			// 清空画布
 			USER_CASE.clear();
 
-			var list = USER_DB.animate.all();
-			var cur_queue = null;
-			var cur_obj = null;
+			// 更新元素属性
 
+			// 遍历所有元素，并重新绘制
+			var list = USER_DB.element.all();
 			for(name in list){
-				cur_queue = list[name]['queue'];
-				cur_obj = USER_DB.element.getById(name);
-
-				cur_queue.forEach(function(item, index, arr){
-					// 更新元素属性
-					item['fn_name'].apply(cur_obj ,item['params']);
-				});
-
-				// 重绘动画帧
-				cur_obj.draw();
+				// 重绘动画帧(所有元素)
+				list[name].draw();
 			}
 
-			cur_queue = null;
+			animation_id = requestAnimationFrame(animationQueue);
 		}
 
 		// 开始执行动画
 		this.start = function(){
 			// 开始
-			animation_id = requestAnimationFrame(animationQueue);
+			animationQueue();
 		};
 
 		// 停止动画
 		this.stop = function(){
 			cancelAnimationFrame(animation_id);
+		};
+
+		// 动画翻转
+		this.reverse = function(){
+
+		};
+
+		// 动画暂停
+		// 时间，初始位置，结束位置，
+		// 当前位置
+		// 根据时间、初始位置和结束位置计算加速度
+		this.pause = function(){
+
+		};
+	}
+
+	// 
+	// 针对单个值的变化
+	/**
+	 * [TweenLine description]
+	 * @param {[number]} start_value [初始值]
+	 * @param {[number]} end_value   [结束值]
+	 * @param {[timestamp]} start_time  [开始的时间戳]
+	 * @param {[milisecond]} last_time   [持续的时间]
+	 */
+	function TweenLine(start_value, end_value, start_time, last_time){
+		var _this = this;
+
+		var sofar_time = _G_TOOL.continued(start_time);
+		var change_value = end_value - start_value;
+
+		function useTweenLine(fn){
+			if(sofar_time > last_time){
+				return end_value;
+			}else{
+				return fn(sofar_time, start_value, change_value, last_time);
+			}
+		}
+
+		var arr = [
+			'easeInQuad',
+			'easeOutQuad',
+			'easeInOutQuad',
+			'easeInCubic',
+			'easeOutCubic',
+			'easeInOutCubic',
+			'easeInQuart',
+			'easeOutQuart',
+			'easeInOutQuart',
+			'easeInQuint',
+			'easeOutQuint',
+			'easeInOutQuint',
+			'easeInSine',
+			'easeOutSine',
+			'easeInOutSine',
+			'easeInExpo',
+			'easeOutExpo',
+			'easeInOutExpo',
+			'easeInCirc',
+			'easeOutCirc',
+			'easeInOutCirc',
+			'easeInElastic',
+			'easeOutElastic',
+			'easeInOutElastic',
+			'easeInBack',
+			'easeOutBack',
+			'easeInOutBack',
+			'easeInBounce',
+			'easeOutBounce',
+		];
+
+		arr.forEach(function(item, index, arr){
+			_this[item] = function(){
+				useTweenLine(_G_EASE[item]);
+			};
+		});
+	}
+
+	// 动画曲线，ease效果
+	// * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
+	// https://github.com/danro/jquery-easing/blob/master/jquery.easing.js
+	// http://gsgd.co.uk/sandbox/jquery/easing/
+	// http://api.jqueryui.com/easings/
+	// ease效果
+	// t: current time, b: begInnIng value, c: change In value, d: duration
+	// t: 当前时间
+	// b: 初始值
+	// c: 值的变化（差值，最终值和初始值之间的差）
+	// d: 持续时间
+	function EaseEffectLine(){
+		this.easeInQuad = function (t, b, c, d) {
+			return c*(t/=d)*t + b;
+		};
+
+		this.easeOutQuad = function (t, b, c, d) {
+			return -c *(t/=d)*(t-2) + b;
+		};
+
+		this.easeInOutQuad = function (t, b, c, d) {
+			if ((t/=d/2) < 1) return c/2*t*t + b;
+			return -c/2 * ((--t)*(t-2) - 1) + b;
+		};
+
+		this.easeInCubic = function (t, b, c, d) {
+			return c*(t/=d)*t*t + b;
+		};
+
+		this.easeOutCubic = function (t, b, c, d) {
+			return c*((t=t/d-1)*t*t + 1) + b;
+		};
+
+		this.easeInOutCubic = function (t, b, c, d) {
+			if ((t/=d/2) < 1) return c/2*t*t*t + b;
+			return c/2*((t-=2)*t*t + 2) + b;
+		};
+
+		this.easeInQuart = function (t, b, c, d) {
+			return c*(t/=d)*t*t*t + b;
+		};
+
+		this.easeOutQuart = function (t, b, c, d) {
+			return -c * ((t=t/d-1)*t*t*t - 1) + b;
+		};
+
+		this.easeInOutQuart = function (t, b, c, d) {
+			if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+			return -c/2 * ((t-=2)*t*t*t - 2) + b;
+		};
+
+		this.easeInQuint = function (t, b, c, d) {
+			return c*(t/=d)*t*t*t*t + b;
+		};
+
+		this.easeOutQuint = function (t, b, c, d) {
+			return c*((t=t/d-1)*t*t*t*t + 1) + b;
+		};
+
+		this.easeInOutQuint = function (t, b, c, d) {
+			if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+			return c/2*((t-=2)*t*t*t*t + 2) + b;
+		};
+
+		this.easeInSine = function (t, b, c, d) {
+			return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+		};
+
+		this.easeOutSine = function (t, b, c, d) {
+			return c * Math.sin(t/d * (Math.PI/2)) + b;
+		};
+
+		this.easeInOutSine = function (t, b, c, d) {
+			return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+		};
+
+		this.easeInExpo = function (t, b, c, d) {
+			return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+		};
+
+		this.easeOutExpo = function (t, b, c, d) {
+			return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+		};
+
+		this.easeInOutExpo = function (t, b, c, d) {
+			if (t==0) return b;
+			if (t==d) return b+c;
+			if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+			return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+		};
+
+		this.easeInCirc = function (t, b, c, d) {
+			return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+		};
+
+		this.easeOutCirc = function (t, b, c, d) {
+			return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+		};
+
+		this.easeInOutCirc = function (t, b, c, d) {
+			if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+			return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+		};
+
+		this.easeInElastic = function (t, b, c, d) {
+			var s=1.70158;var p=0;var a=c;
+			if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+			if (a < Math.abs(c)) { a=c; var s=p/4; }
+			else var s = p/(2*Math.PI) * Math.asin (c/a);
+			return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+		};
+
+		this.easeOutElastic = function (t, b, c, d) {
+			var s=1.70158;var p=0;var a=c;
+			if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+			if (a < Math.abs(c)) { a=c; var s=p/4; }
+			else var s = p/(2*Math.PI) * Math.asin (c/a);
+			return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+		};
+
+		this.easeInOutElastic = function (t, b, c, d) {
+			var s=1.70158;var p=0;var a=c;
+			if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+			if (a < Math.abs(c)) { a=c; var s=p/4; }
+			else var s = p/(2*Math.PI) * Math.asin (c/a);
+			if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+			return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+		};
+
+		this.easeInBack = function (t, b, c, d, s) {
+			if (s == undefined) s = 1.70158;
+			return c*(t/=d)*t*((s+1)*t - s) + b;
+		};
+
+		this.easeOutBack = function (t, b, c, d, s) {
+			if (s == undefined) s = 1.70158;
+			return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+		};
+
+		this.easeInOutBack = function (t, b, c, d, s) {
+			if (s == undefined) s = 1.70158; 
+			if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+			return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+		};
+
+		this.easeInBounce = function (t, b, c, d) {
+			return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+		};
+
+		this.easeOutBounce = function (t, b, c, d) {
+			if ((t/=d) < (1/2.75)) {
+				return c*(7.5625*t*t) + b;
+			} else if (t < (2/2.75)) {
+				return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+			} else if (t < (2.5/2.75)) {
+				return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+			} else {
+				return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+			}
 		};
 	}
 	// 
@@ -792,7 +1039,7 @@
 		a_snap_shoot._ctx.drawImage(USER_CASE.canvas, 0, 0, USER_CASE.width, USER_CASE.height);
 
 		// 创建快照的时间
-		this.timeStamp = (new Date()).getTime();
+		this.time = _G_TOOL.timeStamp();
 		this.snapData = a_snap_shoot;// 快照就是这个离屏canvas
 		this.id = _G_KEY.getKey('snapshoot');
 		this.width = a_snap_shoot._width;
@@ -1061,6 +1308,21 @@
 		var _inner_text = show_text;
 		var _this = this;
 
+		var _id_value = _G_KEY.getKey();
+
+		// 把属性单独存数据库
+		// 属性相关内容
+		var _attr = USER_DB.attribute.add({
+			id: _id_value
+		});
+
+		// 操作属性
+		this.attr = function(){
+
+		};
+
+		// 样式相关内容
+
 		// 功能
 		// 解析css：边框，背景，尺寸，内容，子元素
 		// 动画，交互
@@ -1087,14 +1349,12 @@
 		
 		var effective_style = getEffectStyle(_style);
 
-		// 把属性单独存数据库如何？
-		// 
-		this.id = '';
+		this.id = _id_value;
 		this.klass = '';
 		this.innerText = show_text || '';
 
-		// 属性
-		this.attr = {};
+		
+
 
 		// 父元素
 		this.parent = null;
@@ -1104,6 +1364,7 @@
 
 		// 兄弟元素
 		this.siblings = [];
+
 
 		// 该元素的绝对位置：相对于canvas左上角的位置
 		this.absolute = function(){
@@ -1182,6 +1443,8 @@
 			}else{
 				console.log('没有子元素可画');
 			}
+
+			return this;
 		};
 
 		this.append = function(other_div){
@@ -1202,11 +1465,17 @@
 				// 向这个元素的兄弟元素中加入已经存在的其他兄弟元素
 				other_div.siblings.push(temp_div);
 			}
+
+			return this;
 		};
 
 		this.remove = function(){
 			// 移除当前这个div
+			// 从数据库中删除该div
 			// 更新画布
+			USER_DB.element.del(_id_value);
+
+			return this;
 		};
 
 		// this.css = function(cssObj){
@@ -1290,6 +1559,8 @@
 
 	// 构造函数
 	function DOM(canvas){
+		var _this = this;
+
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.width = canvas.width;
@@ -1307,16 +1578,6 @@
 		this.when = function(fn, milisec){
 
 		};
-
-		// 全局动画
-
-		// 在canvas上添加事件
-		ELEM_ADD_EVENT(this.canvas);
-
-		// 用户实例
-		USER_CASE = this;
-
-		USER_A.start();
 
 		this.div = function(obj, txt){
 			var _div = new DIV(obj, txt);
@@ -1350,8 +1611,18 @@
 
 		// 清空画布
 		this.clear = function(){
-			this.canvas.clearRect(0, 0, this.width, this.height);
+			_this.ctx.clearRect(0, 0, this.width, this.height);
 		};
+
+		// 全局动画
+
+		// 在canvas上添加事件
+		ELEM_ADD_EVENT(this.canvas);
+
+		// 用户实例
+		USER_CASE = this;
+
+		USER_A.start();
 	}
 
 	// 单纯的画一个div
@@ -1643,16 +1914,18 @@
 
 			// 文本相关样式
 			var _text_css = _filter.text();
+
 			// 阴影相关样式
 			var _boxshadow_css = _filter.boxShadow();
+
 			// 背景相关样式
 			var _background_css = _filter.background();
+
 			// 边框相关样式
 			var _border_css = _filter.border();
+
 			// 轮廓相关样式
 			var _outline_css = _filter.outline();
-
-			
 
 			// 画阴影
 			shadow(_boxshadow_css, base);
