@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>画图</title>
+</head>
+<body>
+	<canvas id="c" width="1000" height="1000"></canvas>
+
+	
+	<script src="draw.js"></script>
+	<script>
+		var c = document.getElementById('c');
+		var ctx = c.getContext('2d');
+
+		var pen = new Draw('c');
+
+		pen.test_heart();
+
+		pen.line(100, 200, 500, 400);
+
+		pen.radiusRect(130, 320, 40, 160, 20);
+
+		pen.fan(60, 60, 50, 120);
+		pen.fan1(140, 140, 60, 55, 60);
+		pen.ring(60, 200, 40, 50);
+
+		pen.arrow(200, 400, 100, 40);
+
+		pen.arrow(300, 300, 50, 10);
+
+
+		pen.polygon(500, 500, 6, 100);
+
+		pen.polygon(120, 120, 7, 40);
+
+		pen.net(500, 600, 312, 230, 14, 20)
+	</script>
+</body>
+</html>

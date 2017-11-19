@@ -1707,9 +1707,9 @@
 		};
 
 		// 当运行milisec的时候执行函数fn
-		this.when = function(fn, milisec){
+		// this.when = function(fn, milisec){
 
-		};
+		// };
 
 		this.div = function(obj, txt){
 			var _div = new DIV(obj, txt);
@@ -1722,14 +1722,14 @@
 			return _div;
 		};
 
-		// 创建无序列表
-		this.ul = function(obj){};
+		// // 创建无序列表
+		// this.ul = function(obj){};
 
-		// 有序列表
-		this.ol = function(obj){};
+		// // 有序列表
+		// this.ol = function(obj){};
 
-		// 图片元素
-		this.img = function(src){};
+		// // 图片元素
+		// this.img = function(src){};
 
 		// 快照：目前仅仅支持保存一张图片
 		// 理想情况，不仅保存图片，还能保存获取快照的时刻所有元素的内容
@@ -1739,6 +1739,11 @@
 			var snap = new SnapShoot();
 
 			return snap;
+		};
+
+		// 粒子系统
+		this.particle = function(num, type){
+			
 		};
 
 		// 清空画布
@@ -2262,4 +2267,16 @@
 
 	window.DOM = DOM;
 	window.user_db = USER_DB;
+
+	// 动画循环的兼容方案
+	// 来源：HTML5+JavaScript动画基础 page 17
+	if(!window.requestAnimationFrame){
+		window.requestAnimationFrame = (window.webkitReqestAnimationFrame || 
+			window.mozRequestAnimationFrame ||
+			window.oRequestAnimationFrame || 
+			window.msRequestAnimationFrame ||
+			function(callback){
+				return window.setTimeout(callback, 1000/60);
+			});
+	}
 })();

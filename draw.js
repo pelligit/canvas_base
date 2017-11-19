@@ -8,6 +8,19 @@ class Draw{
 
 		this.width = c.width;
 		this.height = c.height;
+
+		this.fillStyle = '#000';
+		this.stokeStyle = '#000';
+	}
+
+	setFillStyle(style){
+		let default_style = '#000';
+		this.fillStyle = style || default_style;
+	}
+
+	setStrokeStyle(style){
+		let default_style = '#000';
+		this.strokeStyle = default_style;
 	}
 
 	// 基本图形
@@ -35,6 +48,31 @@ class Draw{
 	rect(x, y, w, h){
 		// 画一个矩形
 		this.ctx.strokeRect(x, y, w, h);
+	}
+
+	radiusRect(x, y, w, h, radius){
+		if(w > h){
+			if(radius > h){
+				radius = h;
+			}
+		}else{
+			if(radius > w){
+				radius = w;
+			}
+		}
+
+		this.ctx.beginPath();
+		this.ctx.moveTo(x + radius, y);
+		this.ctx.lineTo(x + w - radius, y);
+		this.ctx.arcTo(x + w, y, x + w, y + radius, radius);
+		this.ctx.lineTo(x + w, y + h - radius);
+		this.ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius);
+		this.ctx.lineTo(x + radius, y + h);
+		this.ctx.arcTo(x, y + h, x, y + h - radius, radius);
+		this.ctx.lineTo(x, y + radius);
+		this.ctx.arcTo(x, y, x + radius, y, radius);
+		this.ctx.closePath();
+		this.ctx.fill();
 	}
 
 	square(x, y, w){
@@ -115,8 +153,139 @@ class Draw{
 		this.ctx.stroke();
 	}
 
-	heart(){
+	test_heart(){
 		// 心形
+		this.ctx.beginPath();
+		this.ctx.moveTo(75, 40);
+		this.ctx.bezierCurveTo(75, 37, 70, 25, 50, 25);
+		this.ctx.bezierCurveTo(20, 25, 20, 62.5, 20, 62.5);
+		this.ctx.bezierCurveTo(20, 80, 40, 102, 75, 120);
+		this.ctx.bezierCurveTo(110, 102, 130, 80, 130, 62.5);
+		this.ctx.bezierCurveTo(130, 62.5, 130, 25, 100, 25);
+		this.ctx.bezierCurveTo(85, 25, 75, 37, 75, 40);
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	// 心型
+	heart(x, y){
+		this.ctx.beginPath();
+		this.ctx.moveTo(75, 40);
+		this.ctx.bezierCurveTo(75, 37, 70, 25, 50, 25);
+		this.ctx.bezierCurveTo(20, 25, 20, 62.5, 20, 62.5);
+		this.ctx.bezierCurveTo(20, 80, 40, 102, 75, 120);
+		this.ctx.bezierCurveTo(110, 102, 130, 80, 130, 62.5);
+		this.ctx.bezierCurveTo(130, 62.5, 130, 25, 100, 25);
+		this.ctx.bezierCurveTo(85, 25, 75, 37, 75, 40);
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	// 圆环
+	ring(x, y, r1, r2){
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, r1, 0, Math.PI * 2, true);
+		this.ctx.arc(x, y, r2, 0, Math.PI * 2, false);
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	// 扇形
+	/**
+	 * [fan description]
+	 * @param  {[type]} x   [description]
+	 * @param  {[type]} y   [description]
+	 * @param  {[type]} r   [description]
+	 * @param  {[type]} deg [description]
+	 * @return {[type]}     [description]
+	 */
+	fan(x, y, r, deg){
+		let real_rad = (Math.PI/180) * deg;
+		this.ctx.beginPath();
+		this.ctx.moveTo(x, y);
+		this.ctx.lineTo(x + r, y);
+		this.ctx.arc(x, y, r, 0, real_rad, false);
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	fan1(x, y, r1, r2, deg){
+		let real_rad = (Math.PI/180) * deg;
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, r1, 0, real_rad, false);
+		this.ctx.arc(x, y, r2, real_rad, 0, true);
+		this.ctx.closePath();
+		this.ctx.fill();
+		// this.ctx.stroke();
+	}
+
+	// 箭头
+	/**
+	 * [arrow description]
+	 * @param  {[type]} x [description]
+	 * @param  {[type]} y [description]
+	 * @param  {[type]} w [description]
+	 * @param  {[type]} h [description]
+	 * @return {[type]}   [description]
+	 */
+	arrow(x, y, w, h){
+		this.ctx.beginPath();
+		this.ctx.moveTo(x, y + h);
+		this.ctx.lineTo(x + w, y + h);
+		this.ctx.lineTo(x + w, y);
+		this.ctx.lineTo(x + w + 0.75 * w, y + h + h/2);
+		this.ctx.lineTo(x + w, y + h + h + h);
+		this.ctx.lineTo(x + w, y + h + h);
+		this.ctx.lineTo(x, y + h + h);
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	// 正多边形
+	polygon(cx, cy, edge_sum, edge_length){
+		this.ctx.beginPath();
+		let per_rad = (2 * Math.PI)/edge_sum;
+		for(let i = 0; i < edge_sum; i++){
+			let x = Math.cos(per_rad * i);
+			let y = Math.sin(per_rad * i);
+			this.ctx.lineTo(x * edge_length + cx, y * edge_length + cy);
+		}
+
+		// this.
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+
+	// 网格
+	net(x, y, w, h, x_distance, y_distance){
+		x_distance = x_distance || 10;
+		y_distance = y_distance || 10;
+
+		let x_sum = Math.floor(w/x_distance);
+		let y_sum = Math.floor(h/y_distance);
+
+		if(x%2 === 0){
+			x = x + 0.5;
+		}
+
+		if(y%2 === 0){
+			y =  y + 0.5;
+		}
+
+		for(let i = 1; i <= x_sum; i++){
+			this.ctx.moveTo(x + x_distance * i, y);
+			this.ctx.lineTo(x + x_distance * i, y + h);
+		}
+
+		for(let j = 1; j <= y_sum; j++){
+			this.ctx.moveTo(x, y + y_distance * j);
+			this.ctx.lineTo(x + w, y + y_distance * j);
+		}
+
+		// 边框
+		this.ctx.strokeRect(x, y, w, h);
+
+		this.ctx.stroke();
 	}
 
 
