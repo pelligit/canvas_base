@@ -271,7 +271,7 @@
 		};
 
 		// 随机的颜色值
-		this.randomColor = funciton(){
+		this.randomColor = function(){
 			var r = this.randomBetweenInt(0, 255);
 			var g = this.randomBetweenInt(0, 255);
 			var b = this.randomBetweenInt(0, 255);
@@ -279,6 +279,75 @@
 
 			return 'rgba('+ r +', '+ g +', '+ b +', '+ a +')';
 		};
+
+		this.offsetCanvas = function(w, h){
+			return new OffsetCanvas(w, h);
+		};
+
+		this.loadImgs = function(imgSrcList, fn){
+			loadAllImg(imgSrcList, fn);
+		};
+
+
+		// 离屏canvas
+		function OffsetCanvas(w, h){
+			var o_canvas = _G_TOOL.createCanvas(w, h);
+			var o_ctx = o_canvas.getContext('2d');
+
+			this._canvas = o_canvas;
+			this._ctx = o_ctx;
+			this._width = o_canvas.width;
+			this._height = o_canvas.height;
+
+			this.saveImg = function(type, quality){
+				var typeVal = type || 'image/png';
+				var qualityVal = quality || 1;
+				return this._canvas.toDataURL(typeVal, qualityVal);
+			};
+
+			this.draw = function(fn){
+				if(_G_TYPE.isFunction(fn)){
+					fn(this._ctx);
+				}
+			};
+
+			return this;
+		}
+
+		// 加载所有的图片
+		/**
+		 * [loadAllImg description]
+		 * @param  {[array]}   imgSrcList [图片链接的地址集]
+		 * @param  {Function} fn         [回调函数，当所有的图片都加载好了后调用]
+		 * @return {[undefined]}              [没有返回值]
+		 */
+		function loadAllImg(imgSrcList, fn){
+			var srcList = _G_TYPE.isArray(imgSrcList) ? imgSrcList : [imgSrcList];
+			
+			var useFul = 0;
+			var loadCount = 0;
+			var useFulList = [];
+
+			srcList.forEach(function(item, index, arr){
+				if(_G_TYPE.isString(item)){
+					useFul = useFul + 1;
+					useFulList.push(item);
+
+					var img = new Image();
+					img.src = item;
+					img.onload = function(e){
+						loadCount = loadCount + 1;
+
+						if(loadCount >= useFul){
+							console.log('全部加载成功');
+							if(_G_TYPE.isFunction(fn)){
+								fn(useFulList);
+							}
+						}
+					};
+				}
+			});
+		}
 	}
 
 	// -------------------------------------------------------------
@@ -789,13 +858,35 @@
 	function Animation(){
 		var animation_id = null;
 		var _this = this;
+		var pause_animate = false;// 表示不暂停，为true表示暂停
+
+		var pause_time = 0;
+		var restart_time = 0;
 
 		// 动画初始化的时间
 		var initial_time = _G_TOOL.timeStamp();
 
 		this.frame_counter = 0;
 
+		// 动画实际运行的时间
+		// 不包括暂停的时间
+		this.realTime = function(){
+			var cur = _G_TOOL.timeStamp();
+
+			if(!pause_animate){
+				return pause_time - this.initial_time;
+			}else{
+				return cur - this.initial_time;
+			}
+		};
+
 		function animationQueue(){
+			if(!pause_animate){
+				animation_id = requestAnimationFrame(animationQueue);
+			}
+
+			console.log('hello animate');
+
 			_this.frame_counter++;
 
 			// 清空画布
@@ -815,8 +906,6 @@
 					list[name].draw();
 				}
 			}
-
-			animation_id = requestAnimationFrame(animationQueue);
 		}
 
 		// 开始执行动画
@@ -840,7 +929,27 @@
 		// 当前位置
 		// 根据时间、初始位置和结束位置计算加速度
 		this.pause = function(){
+			if(pause_animate){
+				// 如果已经是暂停状态，则返回
+				return;
+			}
 
+			// 暂停的时间
+			pause_time = _G_TOOL.timeStamp();
+			pause_animate = true;
+		};
+
+		// 重新开始
+		this.restart = function(){
+			// 如果是正在运行的状态，则不能重新开始
+			if(!pause_animate){
+				return;
+			}
+
+			pause_animate = false;
+			// 重新开始的时间
+			restart_time = _G_TOOL.timeStamp();
+			this.start();
 		};
 	}
 
@@ -851,19 +960,19 @@
 	 * @param {[number]} start_value [初始值]
 	 * @param {[number]} end_value   [结束值]
 	 * @param {[timestamp]} start_time  [开始的时间戳]
-	 * @param {[milisecond]} last_time   [持续的时间]
+	 * @param {[milisecond]} during_time   [持续的时间]
 	 */
-	function TweenLine(start_value, end_value, start_time, last_time){
+	function TweenLine(start_value, end_value, start_time, during_time){
 		var _this = this;
 
 		var sofar_time = _G_TOOL.continued(start_time);
 		var change_value = end_value - start_value;
 
 		function useTweenLine(fn){
-			if(sofar_time > last_time){
+			if(sofar_time > during_time){
 				return end_value;
 			}else{
-				return fn(sofar_time, start_value, change_value, last_time);
+				return fn(sofar_time, start_value, change_value, during_time);
 			}
 		}
 
@@ -1075,24 +1184,14 @@
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
-	// 离屏canvas
-	// 用离屏canvas保存快照
-	function OffsetCanvas(w, h){
-		var o_canvas = _G_TOOL.createCanvas(w, h);
-		var o_ctx = o_canvas.getContext('2d');
-
-		this._canvas = o_canvas;
-		this._ctx = o_ctx;
-		this._width = o_canvas.width;
-		this._height = o_canvas.height;
-
-	}
+	
 
 	// 单个快照
 	// 放在这里只用声明一次
 	// 如果放在dom的方法里面，则每次调用都需要重新声明一次
 	function SnapShoot(){
-		var a_snap_shoot = new OffsetCanvas(USER_CASE.width, USER_CASE.height);
+		var a_snap_shoot = _G_TOOL.offsetCanvas(USER_CASE.width, USER_CASE.height);
+
 		a_snap_shoot._ctx.drawImage(USER_CASE.canvas, 0, 0, USER_CASE.width, USER_CASE.height);
 
 		// 创建快照的时间
@@ -1573,6 +1672,9 @@
 				var child_arr = _this.children;
 				var child_len = child_arr.length;
 
+				// 将div画在离屏canvas上
+				// 然后再将离屏canvas的内容画在当前canvas上
+
 				// 画完了，确定子元素
 				if(child_len !== 0){
 					// 根据层次排序
@@ -1788,6 +1890,12 @@
 		USER_A.start();
 	}
 
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+
+	// 粒子：球形粒子
 	function ParticleBall(r, color, max_x, max_y){
 		var _r = r || 1;
 		var _x = _G_TOOL.randomBetweenInt(0, max_x);
@@ -1823,6 +1931,81 @@
 		};
 	}
 
+	// 线性粒子
+	/**
+	 * [ParticleLine description]
+	 * @param {[type]} w       [线宽]
+	 * @param {[type]} min_len [线的最小长度]
+	 * @param {[type]} max_len [线的最大]
+	 */
+	function ParticleLine(w, min_len, max_len){
+
+	}
+
+	// 矩形粒子
+	/**
+	 * [ParticleRect description]
+	 */
+	function ParticleRect(w){
+
+	}
+
+	// ----------------------------------------------------------
+	// ----------------------------------------------------------
+	// ----------------------------------------------------------
+	// ----------------------------------------------------------
+	// 轨迹方程
+	// 根据x的值，获取y的值
+	// 动画的时候只需要计算x的值，然后根据轨迹方程，确定y的值，就好了
+	function TrailFunction(){
+		// 直线轨迹
+		// 直线方程：y = ax + b
+		this.line = function(x, obj){
+			var _obj = {
+				a: 4, // 斜率
+				b: 9
+			};
+
+			var _a = obj.a || 1;
+			var _b = obj.b || 0;
+
+			return _a * x + _b;
+		};
+
+		// 圆的轨迹方程
+		this.circle = function(x, obj){
+			var _obj = {
+				x: 0, // 圆心x
+				y: 0, // 圆心y
+				r: 30 // 圆半径
+			};
+
+			var x_a = x - (obj.x || 0);
+			var y_b = y - (obj.y || 0);
+			var _r = obj.r || 0;
+
+			if(_r === 0){
+				return;
+			}
+
+			// x_a * x_a + y_b * y_b = _r * _r;
+
+			var _y = Math.sqrt(_r * _r - x_a * x_a) + b;
+
+			return _y;
+		};
+		// 椭圆方程
+		// 二次贝塞尔曲线
+		// 三次贝塞尔曲线
+		// 波形方程
+		// 圆方程
+		// 双曲线方程
+		// 抛物线方程
+	}
+	// ----------------------------------------------------------
+	// ----------------------------------------------------------
+
+	// 坐标点的变化
 	function XY(x, y){
 		var _x = x;
 		var _y = y;
@@ -1863,7 +2046,7 @@
 		};
 	}
 
-	// 单纯的画一个div
+	// 单纯的画一个div，带圆角的
 	function DRAW(_base_info){
 		// 确定画法
 		var _ctx = USER_CASE.ctx;
@@ -2165,6 +2348,11 @@
 			// 轮廓相关样式
 			var _outline_css = _filter.outline();
 
+			// 先分析是否有图片需要加载
+			// 如果有需要加载的图
+			// 先加载图，再绘制
+			// 如果在过程中变化了样式呢？
+
 			// 画阴影
 			shadow(_boxshadow_css, base);
 
@@ -2365,6 +2553,24 @@
 		// 判断值有哪些
 		return obj;
 	}
+
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	function checkCssImages(){
+		// 遍历css属性中的与图片属性有关的内容
+		// backgroundImage
+		// borderImage
+		// list-style-image
+	}
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
+	// ----------------------------------------------------------------
 
 	window.DOM = DOM;
 	window.user_db = USER_DB;
