@@ -23,6 +23,8 @@
 	// 用户数据库
 	var USER_DB = new DATABASE();
 
+	var USER_WIDTH, USER_HEIGHT;
+
 	// 初始化用户数据表
 	// animate是保存动画队列的表
 	// event是保存事件堆栈的表
@@ -256,6 +258,26 @@
 		// 距离start_time, 持续了多久
 		this.continued = function(start_time){
 			return this.timeStamp() - start_time;
+		};
+
+		this.randomBetween = function(min, max){
+			min = min || 0;
+
+			return Math.random() * (max - min) + min;
+		};
+
+		this.randomBetweenInt = function(min, max){
+			return (this.randomBetween(min, max) | 0);
+		};
+
+		// 随机的颜色值
+		this.randomColor = funciton(){
+			var r = this.randomBetweenInt(0, 255);
+			var g = this.randomBetweenInt(0, 255);
+			var b = this.randomBetweenInt(0, 255);
+			var a = Math.random();
+
+			return 'rgba('+ r +', '+ g +', '+ b +', '+ a +')';
 		};
 	}
 
@@ -891,6 +913,7 @@
 	// http://api.jqueryui.com/easings/
 	// ease效果
 	// t: current time, b: begInnIng value, c: change In value, d: duration
+	// --------------------------------------------------------------------
 	// t: 当前时间
 	// b: 初始值
 	// c: 值的变化（差值，最终值和初始值之间的差）
@@ -1698,6 +1721,9 @@
 		this.width = canvas.width;
 		this.height = canvas.height;
 
+		USER_WIDTH = this.width;
+		USER_HEIGHT = this.height;
+
 		// 开始时间
 		this.start_time = (new Date()).getTime();
 
@@ -1760,6 +1786,81 @@
 
 		// 全局动画
 		USER_A.start();
+	}
+
+	function ParticleBall(r, color, max_x, max_y){
+		var _r = r || 1;
+		var _x = _G_TOOL.randomBetweenInt(0, max_x);
+		var _y = _G_TOOL.randomBetweenInt(0, max_y);
+		var _color = color || _G_TOOL.randomColor();
+
+		this.setX = function(x){
+			_x = x || _x;
+		};
+
+		this.setY = function(y){
+			_y = y || _y;
+		};
+
+		this.setColor = function(color){
+			_color = color || _color;
+		};
+
+		this.randomX = function(max_x){
+			_x = _G_TOOL.randomBetweenInt(0, max_x);
+		};
+
+		this.randomY = function(max_y){
+			_y = _G_TOOL.randomBetweenInt(0, max_y);
+		};
+
+		this.draw = function(ctx){
+			ctx.save();
+			ctx.fillStyle = _color;
+			ctx.arc(_x, _y, _r, 0, Math.PI * 2, false);
+			ctx.fill();
+			ctx.resotore();
+		};
+	}
+
+	function XY(x, y){
+		var _x = x;
+		var _y = y;
+
+		this.to = function(x_dis, y_dis){
+			return {
+				x: _x + x_dis,
+				y: _y + y_dis
+			};
+		};
+
+		this.toLeft = function(dis){
+			return {
+				x: _x - dis,
+				y: _y
+			};
+		};
+
+		this.toRight = function(dis){
+			return {
+				x: _x + dis,
+				y: _y
+			};
+		};
+
+		this.toTop = function(dis){
+			return {
+				x: _x,
+				y: _y - dis
+			};
+		};
+
+		this.toBottom = function(dis){
+			return {
+				x: _x,
+				y: _y + dis
+			};
+		};
 	}
 
 	// 单纯的画一个div

@@ -1,5 +1,5 @@
 // 基本2d图形
-// 简单的绘制，静态图形，没有交互
+// 简单的绘制，静态图形
 class Draw{
 	constructor(canvasId){
 		let c = document.getElementById(canvasId) || null;
@@ -11,16 +11,6 @@ class Draw{
 
 		this.fillStyle = '#000';
 		this.stokeStyle = '#000';
-	}
-
-	setFillStyle(style){
-		let default_style = '#000';
-		this.fillStyle = style || default_style;
-	}
-
-	setStrokeStyle(style){
-		let default_style = '#000';
-		this.strokeStyle = default_style;
 	}
 
 	// 基本图形
@@ -45,11 +35,13 @@ class Draw{
 		this.ctx.closePath();
 	}
 
+	// 矩形
 	rect(x, y, w, h){
 		// 画一个矩形
 		this.ctx.strokeRect(x, y, w, h);
 	}
 
+	// 圆角矩形
 	radiusRect(x, y, w, h, radius){
 		if(w > h){
 			if(radius > h){
@@ -75,11 +67,29 @@ class Draw{
 		this.ctx.fill();
 	}
 
+	// 正方形
+	/**
+	 * [square description]
+	 * @param  {[type]} x [左上角x坐标]
+	 * @param  {[type]} y [左上角y坐标]
+	 * @param  {[type]} w [正方形的宽度]
+	 * @return {[type]}   [description]
+	 */
 	square(x, y, w){
 		this.ctx.strokeRect(x, y, w, w );
 	}
 
 	// 三角形
+	/**
+	 * [triangle description]
+	 * @param  {[type]} x1 [第一个点x]
+	 * @param  {[type]} y1 [第一个点y]
+	 * @param  {[type]} x2 [第二个点x]
+	 * @param  {[type]} y2 [第二个点y]
+	 * @param  {[type]} x3 [第三个点x]
+	 * @param  {[type]} y3 [第三个点y]
+	 * @return {[type]}    [description]
+	 */
 	triangle(x1, y1, x2, y2, x3, y3){
 		// this.ctx.beginPath();
 		this.ctx.moveTo(x1, y1);
@@ -91,6 +101,13 @@ class Draw{
 	}
 
 	// 圆
+	/**
+	 * [circle description]
+	 * @param  {[type]} x [圆心x]
+	 * @param  {[type]} y [圆心y]
+	 * @param  {[type]} r [圆的半径]
+	 * @return {[type]}   [description]
+	 */
 	circle(x, y, r){
 		this.ctx.beginPath();
 		this.ctx.arc(x, y, r, 0, Math.PI * 2, true);
@@ -209,6 +226,7 @@ class Draw{
 		this.ctx.fill();
 	}
 
+	// 扇形
 	fan1(x, y, r1, r2, deg){
 		let real_rad = (Math.PI/180) * deg;
 		this.ctx.beginPath();
@@ -222,10 +240,10 @@ class Draw{
 	// 箭头
 	/**
 	 * [arrow description]
-	 * @param  {[type]} x [description]
-	 * @param  {[type]} y [description]
-	 * @param  {[type]} w [description]
-	 * @param  {[type]} h [description]
+	 * @param  {[type]} x [左上角坐标x]
+	 * @param  {[type]} y [左上角坐标y]
+	 * @param  {[type]} w [箭头尾巴的宽度]
+	 * @param  {[type]} h [箭头尾巴的高度]
 	 * @return {[type]}   [description]
 	 */
 	arrow(x, y, w, h){
@@ -242,16 +260,25 @@ class Draw{
 	}
 
 	// 正多边形
+	/**
+	 * [polygon description]
+	 * @param  {[type]} cx          [中心点坐标x]
+	 * @param  {[type]} cy          [中心点坐标y]
+	 * @param  {[type]} edge_sum    [总的边数目]
+	 * @param  {[type]} edge_length [边的长度]
+	 * @return {[type]}             [description]
+	 */
 	polygon(cx, cy, edge_sum, edge_length){
 		this.ctx.beginPath();
+		
 		let per_rad = (2 * Math.PI)/edge_sum;
+
 		for(let i = 0; i < edge_sum; i++){
 			let x = Math.cos(per_rad * i);
 			let y = Math.sin(per_rad * i);
 			this.ctx.lineTo(x * edge_length + cx, y * edge_length + cy);
 		}
 
-		// this.
 		this.ctx.closePath();
 		this.ctx.fill();
 	}
@@ -288,9 +315,96 @@ class Draw{
 		this.ctx.stroke();
 	}
 
+	// 十字
+	/**
+	 * [cross description]
+	 * @param  {[type]} x   [中心点位置，x坐标]
+	 * @param  {[type]} y   [中心点位置，y坐标]
+	 * @param  {[type]} len [线的长度]
+	 * @return {[type]}     [description]
+	 */
+	cross(x, y, len){
+		let real_len = Math.abs(len/1);
+		let half = real_len/2;
+		
+		if(x%2 === 0){
+			x = x + 0.5;
+		}
 
+		if(y%2 === 0){
+			y = y + 0.5;
+		}
+
+		this.ctx.moveTo(x - half, y);
+		this.ctx.lineTo(x + half, y);
+
+		this.ctx.moveTo(x, y - half);
+		this.ctx.lineTo(x, y + half);
+
+		this.ctx.stroke();
+	}
+
+	// 月亮
+	moon(x, y, r, deg){
+		let start_rad = Math.PI/180 * (-60);
+		let end_rad = Math.PI/180 * deg;
+
+		// true是逆时针
+		this.ctx.arc(x, y, r, start_rad, end_rad, true);
+
+		// this.ctx.arc(x - 100, y, r * 3, start_rad, end_rad, false);
+
+		this.ctx.stroke();
+	}
+
+	// 波
+	/**
+	 * [wave description]
+	 * @param  {[number]} x [开始坐标，x]
+	 * @param  {[number]} y [开始坐标，y]
+	 * @param  {[number]} w [一个周期的宽度，width]
+	 * @param  {[number]} h [波峰的高度，或者，波谷的深度]
+	 * @param  {[number]} sum [周期数]
+	 */
+	wave(x, y, w, h, sum){
+		let per_deg = Math.PI/180;
+
+		let temp_x, temp_y;
+		let temp_rad;
+		let round = 0;
+
+		let path = w/360;
+
+		// 总的周期数量
+		let sum_round = (sum*360)/1 || 360;
+
+		this.ctx.fontStyle = '微软雅黑 14px';
+		this.ctx.beginPath();
+		this.ctx.moveTo(x, y);
+		for(let i = 0; i < sum_round; i++){
+			temp_rad = per_deg * i;
+			temp_x = i * path + x;
+			temp_y = h * Math.sin(temp_rad) + y;
+			this.ctx.lineTo(temp_x, temp_y);
+		}
+		this.ctx.stroke();
+		// this.ctx.fill();
+	}
 }
 
-// 交互
-// 动画队列
-// 事件队列
+// icon图标库
+class Icon{
+	constructor(w, h){
+		this.width = w || 36;
+		this.height = h || 36;
+		this.color = '#999';
+
+		this.debug = false;
+
+		let canvas = document.createElement('canvas');
+		canvas.width = this.width;
+		canvas.height = this.height;
+
+		this.ctx = canva.ctx;
+	}
+}
