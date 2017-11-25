@@ -390,6 +390,52 @@ class Draw{
 		this.ctx.stroke();
 		// this.ctx.fill();
 	}
+
+	// 连续线，y是x的函数
+	// y的值根据x的变化而变化
+	path(x, y){
+		let per_deg = Math.PI/180;
+
+		this.ctx.beginPath();
+		for(let i = 0; i < 1000; i++){
+			let temp_rad = i * per_deg + per_deg;
+			let temp_x = i + x;
+			let temp_y = temp_x/5 + Math.cos(temp_rad * 20) - ((x * x) * Math.cos(temp_rad))/(10 * x);
+
+			if(i === 0){
+				this.ctx.moveTo(temp_x, temp_y);
+			}else{
+				this.ctx.lineTo(temp_x, temp_y);
+			}
+		}
+		this.ctx.stroke();
+	}
+
+	// 轨迹演示
+	path1(x, y){
+		let count = 0;
+		let per_deg = Math.PI/180;
+		let _this = this;
+
+		this.ctx.beginPath();
+
+
+		setInterval(function(){
+			let temp_rad = count * per_deg + per_deg;
+			let temp_x = count + x;
+			let temp_y = temp_x/5 + Math.cos(temp_rad * 20) - ((x * x) * Math.cos(temp_rad))/(10 * x);
+
+			if(count === 0){
+				_this.ctx.moveTo(temp_x, temp_y);
+			}else{
+				_this.ctx.lineTo(temp_x, temp_y);
+				_this.ctx.stroke();
+			}
+			
+			count = count + 1;
+		}, 10);
+
+	}
 }
 
 // icon图标库
