@@ -436,6 +436,53 @@ class Draw{
 		}, 10);
 
 	}
+
+	// 阿基米德螺线
+	// 根据斐波那契数列绘制而成
+	path2(x, y){
+		// function fib(len)
+		let len = 20;
+		let arr = fib(len);
+		let _rad = Math.PI * 0.5;
+
+		let last_x = false;
+		let last_y = false;
+
+		let pre_x = x;
+		let pre_y = y;
+
+		this.ctx.beginPath();
+
+		for(let i = 1, _x, _y; i < len; i++){
+			// 当前的半径是前面的数和现在的数之和
+			let r = arr[i] + arr[i - 1];
+
+			// 第一个是0
+			let start_rad = Math.abs((i%4 - 1) * _rad);
+
+			let remainder = i%2;
+
+			if(remainder == 1){
+				// 0
+				_x = last_x ? pre_x + r : pre_x - r;
+				_y = pre_y;
+				pre_x = _x;
+				last_x = !last_x;
+			}else{
+				// 1
+				_y = last_y ? pre_y + r : pre_y - r;
+				_x = pre_x;
+				pre_y = _y;
+				last_y = !last_y;
+			}
+
+
+			this.ctx.arc(_x, _y, r, start_rad, _rad, false);
+		}
+
+		// this.ctx.closePath();
+		this.ctx.stroke();
+	}
 }
 
 // icon图标库
@@ -454,3 +501,25 @@ class Icon{
 		this.ctx = canva.ctx;
 	}
 }
+
+
+// Fibonacci
+// 斐波那契数列
+function fib(len){
+	var arr = [];
+	var arr_len = 0;
+	for(var i = 0; i < len; i++){
+		if(i <= 1){
+			arr.push(i);
+		}else{
+			arr_len = arr.length;
+			arr.push(arr[arr_len - 2] + arr[arr_len - 1]);
+		}
+	}
+
+	return arr;
+};
+
+// funtion FIB(arr){
+// 	var arr = [];
+// }

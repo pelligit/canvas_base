@@ -164,6 +164,28 @@
 		this.isImgUrl = function(val){
 
 		};
+
+		// 是否是闰年
+		this.isLeap = function(y){
+			if(y && this.isCanCalculateNumber(y) && y > 0){
+    			if(y%100 === 0){
+    				// 能被100整除
+    				if(y%400 === 0){
+    					return true;
+    				}else{
+    					return false;
+    				}
+    			}else{
+    				if(y%4 === 0){
+    					return true;
+    				}else{
+    					return false;
+    				}
+    			}
+    		}else{
+    			return false;
+    		}
+		};
 	}
 
 	// 工具，杂项工具
@@ -278,6 +300,23 @@
 			var a = Math.random();
 
 			return 'rgba('+ r +', '+ g +', '+ b +', '+ a +')';
+		};
+
+		// Fibonacci
+		// 斐波那契数列
+		this.fib = function(len){
+			var arr = [];
+			var arr_len = 0;
+			for(var i = 0; i < len; i++){
+				if(i <= 1){
+					arr.push(i);
+				}else{
+					arr_len = arr.length;
+					arr.push(arr[arr_len - 2] + arr[arr_len - 1]);
+				}
+			}
+
+			return arr;
 		};
 
 		this.offsetCanvas = function(w, h){
@@ -839,6 +878,232 @@
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
+    // 时间相关
+    function Current(){
+        var _date = new Date();
+
+        // 重新设置时间对象
+        this.reset = function(timestamp){
+        	_date = new Date(timestamp);
+        };
+
+        // 时间戳
+        this.timestamp = function(){
+            return _date.getTime();
+        };
+
+        // 年
+        this.year = function(){
+            return _date.getFullYear();
+        };
+
+        // 月
+        this.month = function(){
+            return _date.getMonth();
+        };
+
+        // 日
+        this.date = function(){
+            return _date.getDate();
+        };
+
+        // 时
+        this.hour = function(){
+            return _date.getHours();
+        };
+
+        // 分
+        this.minute = function(){
+            return _date.getMinutes();
+        };
+
+        // 秒
+        this.second = function(){
+            return _date.getSeconds();
+        };
+
+        // 星期
+        this.week = function(){
+            return _date.getDay();
+        };
+
+        // 年月日
+        this.ymd = function(connect){
+            var patter = /[-\/,]/;
+            var y = this.year();
+            var m = this.month();
+            var d = this.date();
+
+            m = m < 10 ? '0' + m : m;
+            d = d < 10 ? '0' + d : d;
+
+            // 只有一个字符串：-,/,,横杠，斜线，逗号
+            if(connect && connect.length === 1 && patter.test(connect)){
+                return y + connect + m + connect + d;
+            }else{
+                return '' + y + '-' + m + '-' + d;
+            }
+        };
+
+        // 时分秒
+        this.his = function(connect){
+            var h = this.hour();
+            var i = this.minute();
+            var s = this.second();
+
+            h = h < 10 ? '0' + h : h;
+            i = i < 10 ? '0' + i : i;
+            s = s < 10 ? '0' + s : s;
+
+            var patter = /[:-\/]/;
+            if(connect && connect.length === 1 && patter.test(connect)){
+                return '' + h + connect + i + connect + s;
+            }else{
+                return '' + h + ':' + i + ':' + s;
+            }
+        };
+    }
+
+    // 每秒。每分钟、每小时、每天的毫秒数
+    function miliSeconds(){
+    	// 每秒
+    	var per_second = 1000;
+
+    	// 每分钟
+    	var per_minute = per_second * 60;
+
+    	// 每小时
+    	var per_hour = per_minute * 60;
+
+    	// 每天
+    	var per_day = per_hour * 24;
+
+    	// 每个月
+    	var per_month = per_day * 30;// 不准确的时间，每个月不一定30天
+
+    	// 每年
+    	var per_year = per_month * 365;// 每年不一定是365天
+
+    	var per = {
+    		second: per_second,
+    		minute: per_minute,
+    		hour: per_hour,
+    		day: per_day,
+    		month: per_month,
+    		year: per_year
+    	};
+
+    	return per;
+    }
+
+    // 时间计算
+    // 上一秒，下一秒，前x秒，后x秒
+    // 上一分钟，下一分钟，前x分钟，后x分钟
+    // 上一小时，下一小时，前x小时，后x小时
+    // 前一天，后一天，前x天，后x天
+    function TimeCalc(timestamp){
+    	var per = miliSeconds();
+
+    	this.timestamp = timestamp || new Date().getTime();
+
+    	var _date = new Date(this.timestamp);
+
+    	this.second = _date.getSeconds();
+    	this.minute = _date.getMinutes();
+    	this.hour = _date.getHours();
+    	this.date = _date.getDate();
+    	this.month = _date.getMonth();
+    	this.year = _date.getFullYear();
+
+    	var _this = this;
+    	
+    	var function_list = ['Second', 'Minute', 'Hour', 'Day'];
+
+    	function_list.forEach(function(item, index, arr){
+
+    		// 下一分钟、小时、秒
+    		_this['next' + item] = function(){
+    			var _val = item.toLowerCase();
+    			return _this.timestamp + per[_val];
+    		};
+
+    		// 上一分钟、小时、秒
+    		_this['pre' + item] = function(){
+    			var _val = item.toLowerCase();
+    			return _this.timestamp - per[_val];
+    		};
+
+    		// 后x小时，分钟，秒
+    		_this['after' + item + 's'] = function(count){
+    			if(_G_TYPE.isCanCalculateNumber(count)){
+    				// 可以计算的值
+    				var _val = item.toLowerCase();
+    				return _this.timestamp + per[_val] * count;
+    			}else{
+    				return _this.timestamp;
+    			}
+    		};
+
+    		// 前x小时、分钟、秒
+    		_this['before' + item + 's'] = function(count){
+    			if(_G_TYPE.isCanCalculateNumber(count)){
+    				// 可以计算的值
+    				var _val = item.toLowerCase();
+    				return _this.timestamp - per[_val] * count;
+    			}else{
+    				return _this.timestamp;
+    			}
+    		};
+    	});
+    }
+
+    // 今年
+    function ThisYear(){
+    	var _date = new Date();
+    	var year = _date.getFullYear();
+    	var is_leap = _G_TYPE.isLeap(year);
+
+    	// 时间戳
+    	this.timestamp = _date.getTime();
+
+    	// 闰年
+    	this.isLeap = is_leap;
+
+    	// 总天数
+    	this.totalDay = this.isLeap ? 366 : 365;
+
+    	// 该月有多少天
+    	this.monthDayTotal = function(monthVal){
+    		var total = {
+    			'1': 31,
+    			'2': 28,
+    			'3': 31,
+    			'4': 30,
+    			'5': 31,
+    			'6': 60,
+    			'7': 31,
+    			'8': 31,
+    			'9': 30,
+    			'10': 31,
+    			'11': 30,
+    			'12': 31
+    		};
+
+    		if(is_leap){
+    			total['2'] = 29
+    		}
+
+    		if(_G_TYPE.isCanCalculateNumber(monthVal) && monthVal > 0 && monthVal < 13){
+    			return total[monthVal];
+    		}else{
+    			return -1;
+    		}
+    	};
+    }
+
+    function DateDiff(timestamp1, timestamp2){
+
+    }
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
@@ -1999,115 +2264,7 @@
 
 			return _y;
 		};
-		// 椭圆方程
-		// 圆方程
 		
-		// 二次贝塞尔曲线
-		// 三次贝塞尔曲线
-		// 波形方程
-		// 双曲线方程
-		// 抛物线方程
-		// 
-		
-		// 四叶玫瑰线：p=aCOS2x或p=aSin2x(x是sida）
-		// 三叶玫瑰线：p=aCOS3x或p=aSin3x (x是sida）
-		// 伯努利双纽线：p^2=a^2*COS2x或p^2=a^2Sin2x (x是sida）
-		// 星形线：x^2/3+y^2/3 =a^2/3
-		// 心形线：x^2+y^2+ax=a√(x^2+y^2）
-		// 笛卡儿叶形线:x^3+y^3-3axy=0
-		// 蔓叶线：y^2*(2a-x)=x^3
-		// 双曲螺线:px=a(x是sida）
-		// 阿基米德螺线:p=ax(x是sida）
-		// 箕舌线：y=8a^3/(x^2+4a^2)
-		// 摆线:x=a（&-Sin&),y=a(1-COS&），（&是sida）
-		// 对数螺线p=e^ax(x是sida）
-		// 概率曲线：y=e^（-x^2)
-		// 半立方抛物线：y^2=aX^2
-		// 三次抛物线：y=x^3
-		// 函数图形 
-		// 基本初等函数
-		// 幂函数（1)
-		// 数学函数图像大全
-		// 幂函数（2)
-		// 数学函数图像大全
-		// 幂函数（3)
-		// 数学函数图像大全
-		// 指数函数（1）
-		// 数学函数图像大全
-		// 指数函数（2）
-		// 数学函数图像大全
-		// 指数函数（3）
-		// 数学函数图像大全
-		// 对数函数（1）
-		// 数学函数图像大全
-		// 对数函数（2）
-		// 数学函数图像大全
-		// 三角函数（1）
-		// 数学函数图像大全
-		// 三角函数（2）
-		// 数学函数图像大全
-		// 三角函数（3）
-		// 数学函数图像大全
-		// 三角函数（4）
-		// 数学函数图像大全
-		// 三角函数（5）
-		// 数学函数图像大全
-		// 反三角函数（1）
-		// 数学函数图像大全
-		// 反三角函数（2）
-		// 数学函数图像大全
-		// 反三角函数（3）
-		// 数学函数图像大全
-		// 反三角函数（4）
-		// 数学函数图像大全
-		// 反三角函数（5）
-		// 数学函数图像大全
-		// 反三角函数（6）
-		// 数学函数图像大全
-		// 反三角函数（7）
-		// 数学函数图像大全
-		// 反三角函数（8）
-		// 数学函数图像大全
-		// 双曲函数（1）
-		// 数学函数图像大全
-		// 双曲函数（2）
-		// 数学函数图像大全
-		// 双曲函数（3）
-		// 数学函数图像大全
-		// 双曲函数（4）
-		// 数学函数图像大全
-		// 双曲函数（5）
-		// 数学函数图像大全
-		// 双曲函数（6）
-		// 数学函数图像大全
-		// 双曲函数（7）
-		// 数学函数图像大全
-		// 反双曲函数（1）
-		// 数学函数图像大全
-		// 反双曲函数（2）
-		// 数学函数图像大全
-		// 反双曲函数（3）
-		// 数学函数图像大全
-		// 反双曲函数（4）
-		// 数学函数图像大全
-		// 反双曲函数（5）
-		// 数学函数图像大全
-		// 反双曲函数（6）
-		// 数学函数图像大全
-		//  y=sin(1/x) (1)
-		// 数学函数图像大全
-		// y=sin(1/x) (2)
-		// 数学函数图像大全
-		// y=sin(1/x) (3)
-		// 数学函数图像大全
-		// y=sin(1/x) (4)
-		// 数学函数图像大全
-		 
-		 
-		// y = [1/x](1)
-		// 数学函数图像大全
-		// y = [1/x](2)
-		// 数学函数图像大全
 	}
 	// ----------------------------------------------------------
 	// ----------------------------------------------------------
