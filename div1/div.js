@@ -8,6 +8,8 @@
 	// 工具
 	var _G_TOOL = new Tools();
 
+	var _G_DIV_STYLE = _G_TOOL.style;
+
 	// 唯一的键
 	var _G_KEY = new KEY();
 
@@ -271,6 +273,19 @@
 			return obj;
 		};
 
+		// 合并数组
+		this.combineArray = function(){
+			var len = arguments.length;
+			var _arr = [];
+			var temp_arr = null;
+			for(var j = 0; j < len; j++){
+				temp_arr = arguments[j];
+				_arr = _arr.concat(temp_arr);
+			}
+
+			return _arr;
+		};
+
 		// 获取当前的时间戳
 		this.timeStamp = function(){
 			return (new Date()).getTime();
@@ -323,10 +338,47 @@
 			return new OffsetCanvas(w, h);
 		};
 
+		// this.offsetDiv = function(css){};
+
 		this.loadImgs = function(imgSrcList, fn){
 			loadAllImg(imgSrcList, fn);
 		};
 
+		// 每度的弧度值
+		this.deg = Math.PI/180;
+
+		// 绝对值
+		this.abs = Math.abs;
+
+		// 随机数
+		this.random = Math.random;
+
+		this.pi = Math.PI;
+
+		// 毫秒数
+		this.milisec = {
+			second: 1000,				// 一秒
+			minute: 1000 * 60,			// 一分钟
+			hour: 1000 * 60 * 60,		// 一小时
+			day: 1000 * 60 * 60 * 12	// 一天
+		};
+
+		// 可能涉及到的样式表内容
+		this.style = {
+			animate: ['animation-name','animation-duration','animation-timing-function','animation-delay','animation-iteration-count','animation-direction','animation-play-state'],
+			background: ['background-attachment','background-color','background-image','background-position','background-repeat','background-clip','background-origin','background-size'],
+			border: ['border-bottom','border-bottom-color','border-bottom-style','border-bottom-width','border-color','border-left','border-left-color','border-left-style','border-left-width','border-right','border-right-color','border-right-style','border-right-width','border-style','border-top','border-top-color','border-top-style','border-top-width','border-width','border-bottom-left-radius','border-bottom-right-radius','border-image','border-image-outset','border-image-repeat','border-image-slice','border-image-source','border-image-width','border-radius','border-top-left-radius','border-top-right-radius'],
+			outline: ['outline-color','outline-style','outline-width'],
+			box: ['box-shadow'],
+			color: ['opacity'],
+			padding: ['padding-bottom','padding-left','padding-right','padding-top'],
+			size: ['height','width'],
+			font: ['font-family','font-size','font-style','font-variant','font-weight','font-size-adjust','font-stretch'],
+			margin: ['margin-bottom','margin-left','margin-right','margin-top'],
+			position: ['bottom','clear','clip','cursor','display','float','left','overflow','position','right','top','visibility','z-index'],
+			text: ['color','direction','letter-spacing','line-height','text-align','text-decoration','text-indent','text-transform','unicode-bidi','vertical-align','white-space','word-spacing','text-emphasis','hanging-punctuation','punctuation-trim','text-align-last','text-justify','text-outline','text-overflow','text-shadow','text-wrap','word-break','word-wrap'],
+			transition: ['transition-property','transition-duration','transition-timing-function','transition-delay']
+		};
 
 		// 离屏canvas
 		function OffsetCanvas(w, h){
@@ -367,7 +419,7 @@
 			var loadCount = 0;
 			var useFulList = [];
 
-			srcList.forEach(function(item, index, arr){
+			function dealWithItem(item, index, arr){
 				if(_G_TYPE.isString(item)){
 					useFul = useFul + 1;
 					useFulList.push(item);
@@ -385,7 +437,9 @@
 						}
 					};
 				}
-			});
+			}
+
+			srcList.forEach(dealWithItem);
 		}
 	}
 
@@ -837,13 +891,13 @@
 		var obj_event = event_list['elem_event'];
 		var global_event = event_list['doc_event'];
 
-		obj_event.forEach(function(item, index, arr){
+		function dealWithItem(item, index, arr){
 			addElemEventMethod(item);
-		});
+		}
 
-		global_event.forEach(function(item, index, arr){
-			addElemEventMethod(item);
-		});
+		obj_event.forEach(dealWithItem);
+
+		global_event.forEach(dealWithItem);
 
 
 		function addElemEventMethod(item){
@@ -874,7 +928,7 @@
 		}
 	}
 
-	// 事件处理
+	// 事件处理结束
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
@@ -964,45 +1018,13 @@
         };
     }
 
-    // 每秒。每分钟、每小时、每天的毫秒数
-    function miliSeconds(){
-    	// 每秒
-    	var per_second = 1000;
-
-    	// 每分钟
-    	var per_minute = per_second * 60;
-
-    	// 每小时
-    	var per_hour = per_minute * 60;
-
-    	// 每天
-    	var per_day = per_hour * 24;
-
-    	// 每个月
-    	var per_month = per_day * 30;// 不准确的时间，每个月不一定30天
-
-    	// 每年
-    	var per_year = per_month * 365;// 每年不一定是365天
-
-    	var per = {
-    		second: per_second,
-    		minute: per_minute,
-    		hour: per_hour,
-    		day: per_day,
-    		month: per_month,
-    		year: per_year
-    	};
-
-    	return per;
-    }
-
     // 时间计算
     // 上一秒，下一秒，前x秒，后x秒
     // 上一分钟，下一分钟，前x分钟，后x分钟
     // 上一小时，下一小时，前x小时，后x小时
     // 前一天，后一天，前x天，后x天
     function TimeCalc(timestamp){
-    	var per = miliSeconds();
+    	var per = _G_TOOL.milisec;
 
     	this.timestamp = timestamp || new Date().getTime();
 
@@ -1019,7 +1041,9 @@
     	
     	var function_list = ['Second', 'Minute', 'Hour', 'Day'];
 
-    	function_list.forEach(function(item, index, arr){
+    	function_list.forEach(dealWithItem);
+
+    	function dealWithItem(item, index, arr){
 
     		// 下一分钟、小时、秒
     		_this['next' + item] = function(){
@@ -1054,13 +1078,20 @@
     				return _this.timestamp;
     			}
     		};
-    	});
+    	}
+
+    	
     }
 
     // 今年
+    // 是否闰年
+    // 总天数
+    // 每月天数
     function ThisYear(){
     	var _date = new Date();
     	var year = _date.getFullYear();
+
+    	// 是否闰年
     	var is_leap = _G_TYPE.isLeap(year);
 
     	// 时间戳
@@ -1073,36 +1104,94 @@
     	this.totalDay = this.isLeap ? 366 : 365;
 
     	// 该月有多少天
-    	this.monthDayTotal = function(monthVal){
-    		var total = {
-    			'1': 31,
-    			'2': 28,
-    			'3': 31,
-    			'4': 30,
-    			'5': 31,
-    			'6': 60,
-    			'7': 31,
-    			'8': 31,
-    			'9': 30,
-    			'10': 31,
-    			'11': 30,
-    			'12': 31
-    		};
+    	this.monthDayTotal = function(m){
+    		m = m/1;
 
+    		var total = [31,28,31,30,31,60,31,31,30,31,30,31];
+
+    		// 如果是闰年，2月则有29天
     		if(is_leap){
-    			total['2'] = 29
+    			total[1] = 29;
     		}
 
-    		if(_G_TYPE.isCanCalculateNumber(monthVal) && monthVal > 0 && monthVal < 13){
-    			return total[monthVal];
+    		if(_G_TYPE.isCanCalculateNumber(m) && m > 0 && m < 13){
+    			return total[m/1 - 1];
     		}else{
     			return -1;
     		}
     	};
     }
 
+    // 时间差
     function DateDiff(timestamp1, timestamp2){
+    	if(timestamp1 && timestamp2 && _G_TYPE.isCanCalculateNumber(timeStamp1) && _G_TYPE.isCanCalculateNumber(timestamp2)){
 
+	    	var per = _G_TOOL.milisec;
+	    	var minus = Math.abs(timestamp2 - timestamp1);
+
+	    	// 相差多少天
+	    	this.dateDiff = function(){
+	    		return Math.ceil(minus/per.day);
+	    	};
+
+	    	// 相差多少小时
+	    	this.hourDiff = function(){
+	    		return Math.ceil(minus/per.hour);
+	    	};
+
+	    	// 相差多少分钟
+	    	this.minuteDiff = function(){
+	    		return Math.ceil(minus/per.minute);
+	    	};
+
+	    	// 相差多少秒
+	    	this.secondDiff = function(){
+	    		return Math.ceil(minus/per.second);
+	    	};
+
+	    	// 相差多少毫秒
+	    	this.milisecDiff = function(){
+	    		return minus;
+	    	};
+    	}
+    }
+
+    // 定时事件：当在xxx点，触发事件
+    function clockEvent(){
+    	var _timer = setInterval(function(){
+
+    	}, 1000);
+
+    	// 秒，分钟，小时，日期，月份，星期，年
+    	var eventList = ['second', 'minute', 'hour', 'date', 'month', 'week', 'year'];
+
+    	// 整点事件
+    	this.onHour = function(h, fn){
+
+    	};
+
+    	// 分钟事件
+    	/**
+    	 * [onMinute description]
+    	 * @param  {[number]} i [0-59，分钟数，每小时的这分钟都会触发事件]
+    	 * @return {[type]}   [description]
+    	 */
+    	this.onMinute = function(i, fn){
+
+    	};
+
+    	// 秒事件
+    	this.onSecond = function(s, fn){
+
+    	};
+
+    	// 日期事件
+    	this.onDate = function(d, fn){};
+
+    	// 星期事件
+    	this.onWeek = function(w, fn){};
+
+    	this.on = function(datetime, fn){};
     }
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
@@ -1186,7 +1275,7 @@
 
 		// 动画翻转
 		this.reverse = function(){
-
+			// 全局翻转？不科学
 		};
 
 		// 动画暂停
@@ -1205,7 +1294,7 @@
 		};
 
 		// 重新开始
-		this.restart = function(){
+		this.resume = function(){
 			// 如果是正在运行的状态，则不能重新开始
 			if(!pause_animate){
 				return;
@@ -1483,6 +1572,26 @@
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
+	// 离屏div
+	function OffsetDiv(cssObj){
+		var elem = document.createElement('div');
+
+		if(cssObj && _G_TYPE.isObject(cssObj)){
+			for(var name in cssObj){
+				elem.style[name] = cssObj[name];
+			}
+		}
+
+		// 获取单独的样式表
+		var _style = window.getComputedStyle(elem, null);
+
+		// 获取css样式表内容
+		this.getCss = function(){
+
+			// 过滤后的样式
+			return _style;
+		};
+	}
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
@@ -1586,45 +1695,56 @@
 			}
 		};
 
+		// 顶部横线
 		var topLine = function(){
 			_ctx.moveTo(edge_top_line.left.x, edge_top_line.left.y);
 			_ctx.lineTo(edge_top_line.right.x, edge_top_line.right.y);
 		};
 
+		// 右上角圆角
 		var topRightRadius = function(){
 			var dot = vertex.top_right;
 			_ctx.arcTo(dot.x, dot.y, edge_right_line.top.x, edge_right_line.top.x, radius);
 		};
 		
+		// 右边竖线
 		var rightLine = function(){
 			_ctx.lineTo(edge_right_line.bottom.x, edge_right_line.bottom.y);
 		};
 		
+		// 右下角圆角
 		var bottomRightRadius = function(){
 			var dot = vertex.bottom_right;
 			_ctx.arcTo(dot.x, dot.y, edge_bottom_line.right.x, edge_bottom_line.right.y, radius);
 		};
 		
+		// 底边横线
 		var bottomLine = function(){
 			_ctx.lineTo(edge_bottom_line.left.x, edge_bottom_line.left.y);
 		};
 		
+		// 左下角圆角
 		var bottomLeftRadius = function(){
 			var dot = vertex.bottom_left;
 			_ctx.arcTo(dot.x, dot.y, edge_left_line.bottom.x, edge_left_line.bottom.y, radius);
 		};
 		
+		// 左边竖线
 		var leftLine = function(){
 			_ctx.lineTo(edge_left_line.top.x, edge_left_line.top.y);
 		};
 		
+		// 左上角圆角
 		var topLeftRadius = function(){
 			var dot = vertex.top_left;
 			_ctx.arcTo(dot.x, dot.y, edge_top_line.left.x, edge_top_line.left.y, radius);
 		};
 
+		// 创建路径
 		this.createPath = function(){
+			// 开始路径
 			_ctx.beginPath();
+
 			topLine();
 			topRightRadius();
 			rightLine();
@@ -1633,9 +1753,12 @@
 			bottomLeftRadius();
 			leftLine();
 			topLeftRadius();
+
+			// 结束路径
 			_ctx.closePath();
 		};
 
+		// 顶点坐标
 		this.getVertex = function(){
 			return _G_TOOL.deepClone(vertex);
 		};
@@ -1733,8 +1856,14 @@
 	function DIV(obj, show_text){
 		// 位置参考点为左上角
 		// 旋转，缩放参考点为矩形中心点
-		// 
+		
+		// 用户传递进来的样式表内容
+		// 可能有不能用的值，乱七八糟的值，无效的值
 		var _obj = obj || {};
+
+		// 解析成可用的值
+
+
 		var _inner_text = show_text;
 
 		// ----------------------------------
@@ -2268,11 +2397,18 @@
 	}
 	// ----------------------------------------------------------
 	// ----------------------------------------------------------
-
+	// 单个点
 	// 坐标点的变化
 	function XY(x, y){
 		var _x = x;
 		var _y = y;
+
+		this.init = function(){
+			return {
+				x: _x,
+				y: _y
+			};
+		};
 
 		this.to = function(x_dis, y_dis){
 			return {
@@ -2309,6 +2445,15 @@
 			};
 		};
 	}
+
+	// 两个点
+	function TwoPoints(x1, y1, x2, y2){
+		var p1 = new XY(x1, y1);
+		var p2 = new XY(x2, y2);
+	}
+
+	// ---------------------------------------------------
+	// ---------------------------------------------------
 
 	// 单纯的画一个div，带圆角的
 	function DRAW(_base_info){
@@ -2655,6 +2800,18 @@
 			}
 		}
 
+		// 数组转成对象
+		function arrToObj(arr){
+			var obj = {};
+			if(_G_TYPE.isArray(arr)){
+				arr.forEach(function(item, index, arr){
+					obj[item + ''] = '';
+				});
+			}
+			return obj;
+		}
+
+		// 获取样式表结果
 		this.getResult = function(){
 			var _base = this.base();
 			var _box_shadow = this.boxShadow();
@@ -2669,14 +2826,9 @@
 
 		// 基本样式：尺寸和位置
 		this.base = function(){
-			var base_obj = {
-				width: '',
-				height: '',
-				left: '',
-				top: ''
-			};
+			var base_obj = ['width','height','left','top'];
 
-			return deal(this.list, base_obj);
+			return deal(this.list, arrToObj(base_obj));
 		};
 
 		// 获取盒子模型的阴影样式
@@ -2691,101 +2843,45 @@
 
 		// 获取背景样式
 		this.background = function(){
-			var background_obj = {
-				backgroundColor: '#red',
-				backgroundImage: 'url(./path/fdsf.png)',
-				backgroundRepeat: 'no-repeat',
-				backgroundAttachment: '',
-				backgroundPosition: '',
-				background: '',
-				backgroundClip: '',
-				backgroundOrigin: '',
-				backgroundSize: ''
-			};
+			var background_obj = [
+				'backgroundColor','backgroundImage','backgroundRepeat','backgroundAttachment',
+				'backgroundPosition','background','backgroundClip','backgroundOrigin','backgroundSize'
+			];
 
-			return deal(this.list, background_obj);
+			return deal(this.list, arrToObj(background_obj));
 		}
 
 		// 边框样式
 		this.border = function(){
-			var border_obj = {
-				border: '',// solid 1px red
-				borderStyle: '',
-				borderColor: '',
-				borderWidth: '',
-				borderImage: '',
-				borderImageSource: '',
-				borderImageSlice: '',
-				borderImageWidth: '',
-				borderImageWidth: '',
-				borderImageOutset: '',
-				borderImageRepeat: '',
-				borderLeft: '',
-				borderLeftStyle: '',
-				borderLeftColor: '',
-				borderLeftWidth: '',
-				borderTop: '',
-				borderTopStyle: '',
-				borderTopColor: '',
-				borderTopWidth: '',
-				borderRight: '',
-				borderRightStyle: '',
-				borderRightColor: '',
-				borderRightWidth: '',
-				borderBottom: '',
-				borderBottomStyle: '',
-				borderBottomColor: '',
-				borderBottomWidth: '',
-				borderRadius: '',
-				borderTopLeftRadius: '',
-				borderTopRightRadius: '',
-				borderBottomLeftRadius: '',
-				borderBottomRightRadius: ''
-			};
+			var border_obj = [
+				'border','borderStyle','borderColor','borderWidth','borderImage','borderImageSource',
+				'borderImageSlice','borderImageWidth','borderImageWidth','borderImageOutset','borderImageRepeat',
+				'borderLeft','borderLeftStyle','borderLeftColor','borderLeftWidth','borderTop','borderTopStyle',
+				'borderTopColor','borderTopWidth','borderRight','borderRightStyle','borderRightColor','borderRightWidth',
+				'borderBottom','borderBottomStyle','borderBottomColor','borderBottomWidth','borderRadius','borderTopLeftRadius',
+				'borderTopRightRadius','borderBottomLeftRadius','borderBottomRightRadius'
+			];
 
-			return deal(this.list, border_obj);
+			return deal(this.list, arrToObj(border_obj));
 		}
 
 		// 获取与文字相关的css样式内容
 		this.text = function(){
-			// 影响文字内容的css样式
-			var text_obj = {
-				fontSize: '',		// 文字大小
-				fontWeight: '',		// 文字粗细
-				fontFamily: '',		// 字体
-				fontStretch: '',	// 
-				fontStyle: '',		// 
-				unicodeRange: '',	// 
-				textAlign: '',		// 对齐方式
-				textDecoration: '',	// 文字装饰，下划线、删除线等等
-				color: '',			// 文字颜色
-				letterSpacing: '',	// 文字间距
-				direction: '',		// 文字方向
-				lineHeight: '',		// 行高
-				textIndent: '',		// 
-				textShadow: '',		// 文字阴影
-				textTransform: '', 	// 文字变换
-				verticalAlign: '', 	// 纵向
-				whiteSpace: '',
-				wordSpacing: '',
-				textOverflow: '', 	// 文字溢出
-				wordWrap: '',		// 自动换行
-				wordBreak: '',		// 
-				textShadow: ''
-			};
+			var text_obj = [
+				'fontSize','fontWeight','fontFamily','fontStretch','fontStyle','unicodeRange','textAlign',
+				'textDecoration','color','letterSpacing','direction','lineHeight','textIndent','textShadow',
+				'textTransform','verticalAlign','whiteSpace','wordSpacing','textOverflow','wordWrap','wordBreak','textShadow'
+			];
 
-			return deal(this.list, text_obj);
+
+			return deal(this.list, arrToObj(text_obj));
 		}
 
 		// 轮廓样式
 		this.outline = function(){
-			var outline_obj = {
-				outlineColor: '',
-				outlineStyle: '',
-				outlineWidth: ''
-			};
+			var outline_obj = ['outlineColor','outlineStyle','outlineWidth'];
 
-			return deal(this.list, outline_obj);
+			return deal(this.list, arrToObj(outline_obj));
 		};
 	}
 
@@ -2797,6 +2893,38 @@
 		this.outline = function(obj){};
 		this.background = function(obj){};
 		this.text = function(obj){};
+
+		// 尺寸和位置
+		// 颜色和样式
+		// 动画
+
+		// 动画
+		// 背景
+		// 边框和轮廓
+		// 颜色：opacity
+		// 盒子
+		// 颜色
+		// 内边距
+		// 媒体页面内容属性
+		// 尺寸
+		// 弹性盒子
+		// 字体
+		// 网格
+		// 线框
+		// 列表
+		// 外边距
+		// 多列
+		// 定位
+		// 分页
+		// ruby
+		// 语音
+		// 表格
+		// 文本
+		// 2d/3d
+		// 过度
+		// 用户外观
+		// 
+		// 
 	}
 
 	function formatCss(obj){
@@ -2817,6 +2945,8 @@
 		// 判断值有哪些
 		return obj;
 	}
+
+	function CSS2CanvasProperties(){}
 
 	// ----------------------------------------------------------------
 	// ----------------------------------------------------------------
