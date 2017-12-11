@@ -1,4 +1,8 @@
 (function(){
+	// 说明：
+	// 【____性能____】：与性能有关的标签，有进一步优化的空间
+	// _G_：表示‘全局’变量
+
 	// 全局变量
 	// 会一直使用的变量
 
@@ -8,6 +12,7 @@
 	// 工具
 	var _G_TOOL = new Tools();
 
+	// 样式表
 	var _G_DIV_STYLE = _G_TOOL.style;
 
 	// 唯一的键
@@ -26,6 +31,12 @@
 	var USER_DB = new DATABASE();
 
 	var USER_WIDTH, USER_HEIGHT;
+
+	// var sqrt = Math.sqrt;// 开方
+	// var abs = Math.abs;// 绝对值
+	// var sin = Math.sin;
+	// var cos = Math.cos;
+	// var tan = Math.tan;
 
 	// 初始化用户数据表
 	// animate是保存动画队列的表
@@ -317,6 +328,39 @@
 			return 'rgba('+ r +', '+ g +', '+ b +', '+ a +')';
 		};
 
+		// 驼峰命名：background-color=>backgroundColor
+		this.camelString = function(str){
+			if(str.indexOf('-') > 0){
+				var _arr = str.split('-');
+				var len = _arr.length;
+
+				if(len > 1){
+					var _str = _arr[0];
+
+					for(var i = 1; i < len; i++){
+						_str = _str + this.captilizeLetterOne(_arr[i]);
+					}
+
+					return _str;
+				}else{
+					return str;
+				}
+			}else{
+				return str;
+			}
+		};
+
+		// 字符串首字母大写：
+		// 'abcdefg'=>Abcdefg,'hello'=>'Hello'
+		this.captilizeLetterOne = function(str){
+			if(_G_TYPE.isString(str) && isNaN(str/1)){
+				var str0 = str[0];
+				var len = str.length;
+				var strWithOutStr0 = str.substring(1, len);
+				return str0.toUpperCase() + strWithOutStr0;
+			}
+		};
+
 		// Fibonacci
 		// 斐波那契数列
 		this.fib = function(len){
@@ -337,8 +381,6 @@
 		this.offsetCanvas = function(w, h){
 			return new OffsetCanvas(w, h);
 		};
-
-		// this.offsetDiv = function(css){};
 
 		this.loadImgs = function(imgSrcList, fn){
 			loadAllImg(imgSrcList, fn);
@@ -441,6 +483,66 @@
 
 			srcList.forEach(dealWithItem);
 		}
+	}
+
+	// DOM元素方法
+	function Elem(ele){
+		// var doc = window && window.document;
+
+		// 获取元素，类，ID，名字
+		// this.get = function(str){};
+
+		// 创建一个DOM元素
+		// this.create = function(elemName){
+		// 	return doc.createElement(elemName);
+		// };
+		
+		var elem = ele || null;
+
+		// css方法，设置和获取
+		this.css = function(cssObject){
+
+		};
+
+		// 属性方法，设置和获取
+		this.attr = function(attrObject){
+
+		};
+
+		// 插入子元素
+		this.append = function(elem){
+
+		};
+
+		this.text = function(){
+			// 如果有参数，设置该元素的text
+			// 如果没有参数，返回
+		};
+
+		// 内部HTML 字符串
+		this.html = function(){
+
+		};
+
+		// 添加一个class
+		this.addClass = function(str){
+
+		};
+
+		// 移除一个class
+		this.removeClass = function(str){
+
+		};
+
+		// 移除一个属性
+		this.removeAttr = function(str){
+
+		};
+
+		// 从DOM中删除这个元素
+		this.remove = function(){
+
+		};
 	}
 
 	// -------------------------------------------------------------
@@ -1572,25 +1674,107 @@
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
+	// 初步想法：
 	// 离屏div
+	// 通过给离屏div设置样式，然后根据dom方法，获取到已经设置的样式
+	// 这样少写了很多代码
+	// -----------------------------
+	// 经过测试，这种方法不合适
+	// html元素必须显示在页面上后，才会经过计算，如果是没有在页面上显示的话，
+	// 就不会有计算后的值，所有的属性值都是空的
+	// -----------------------------
+	// 该思路失败，以下OffsetDiv是个无效方法
+	// --------------------------------------
+	// 如果将元素插入DOM，但是display设置为none的话，则是可以获取到计算后的css值的
 	function OffsetDiv(cssObj){
 		var elem = document.createElement('div');
 
+		cssObj = cssObj || {};
+
+		var count = 0;
 		if(cssObj && _G_TYPE.isObject(cssObj)){
-			for(var name in cssObj){
+			count++;
+			for(var name in cssObj){				
 				elem.style[name] = cssObj[name];
 			}
 		}
 
-		// 获取单独的样式表
-		var _style = window.getComputedStyle(elem, null);
+		var originDisplay = cssObj['display'];
+		cssObj['display'] = 'none';
+
+		// 样式表过滤
+		function styleFileter(cssObj){
+			var obj = {};
+
+			for(var _name in cssObj){
+				if(_G_TOOL.isCanCalculateNumber(_name)){
+					continue;
+				}
+				
+				obj[_name] = cssObj[_name];	
+			}
+
+			return obj;
+		}
+
+		// 获取计算后的css样式表
+		// 将样式表应用在隐藏的div上，然后再获取这个div的样式
+		// 获取到计算后的样式之后，移除这个样式
+		// 【因为这里涉及到DOM，所以这里的性能可能会有问题】
+		// 【____性能____】
+		function getStyleValues(){
+			var _body = document.body;
+			_body.appendChild(elem);
+
+			for(var _name in cssObj){
+				elem.style[_name] = cssObj[_name];	
+			}
+
+			// 获取已经应用的css值
+			var applyedCss = window.getComputedStyle(elem, null);
+
+			// 移除这个离屏div
+			_body.removeChild(elem);
+
+			return applyedCss;
+		};
 
 		// 获取css样式表内容
 		this.getCss = function(){
+			if(count === 0){
+				return {};
+			}
+
+			var s = getStyle();
+			s['display'] = originDisplay;
 
 			// 过滤后的样式
-			return _style;
+			return styleFileter(s);
 		};
+	}
+
+	// 创建内部可用的css对象
+	// 根据_G_DIV_STYLE生成的
+	// 过滤掉用不到的css属性
+	function buildInnerCss(css){
+		var tempObjArr,
+			tempLength;
+
+		var realObject = {};
+
+		for(var name in _G_DIV_STYLE){
+			
+			tempObjArr = _G_DIV_STYLE[name];
+			tempLength = tempObjArr.length;
+
+			for(var i = 0; i < tempLength; i++){
+				var curVal = tempObjArr[i];// 形如：'background-color'
+				var curRealVal = _G_TOOL.camelString(curVal);// 处理后的结果：形如：backgroundColor
+				realObject[curRealVal] = css[curRealVal];
+			}
+		}
+
+		return realObject;
 	}
 	// -------------------------------------------------------------
 	// -------------------------------------------------------------
@@ -1853,19 +2037,7 @@
 
 
 	// div对象
-	function DIV(obj, show_text){
-		// 位置参考点为左上角
-		// 旋转，缩放参考点为矩形中心点
-		
-		// 用户传递进来的样式表内容
-		// 可能有不能用的值，乱七八糟的值，无效的值
-		var _obj = obj || {};
-
-		// 解析成可用的值
-
-
-		var _inner_text = show_text;
-
+	function DIV(cssObj, show_text){
 		// ----------------------------------
 		// ----------------------------------
 		// ----------------------------------
@@ -1950,30 +2122,23 @@
 		// ----------------------------------
 		// ----------------------------------
 		// ----------------------------------
+		
+		// 位置参考点为左上角
+		// 旋转，缩放参考点为矩形中心点
+		
+		// 用户传递进来的样式表内容
+		// 可能有不能用的值，乱七八糟的值，无效的值
+		// 【____性能____】
+		// 因为这里过滤了两次，而且每次都会过滤有200多个属性的对象，可能引起性能问题
+		// 第一次过滤，这里返回已经计算好的值了，应用在DOM上后再获取
+		var _obj = (new OffsetDiv(cssObj)).getStyleValues();
 
-
-		// 样式相关内容
-
-		// 功能
-		// 解析css：边框，背景，尺寸，内容，子元素
-		// 动画，交互
-
-		// 过滤
-		// 解析
-		// 获取可用的css结果
-		// 将五花八门的css样式，设置成统一的内容
-		// 供后续处理
-		var _PARSE = new Colation(_obj);
-		// 获取到未统一的数据格式
-		var _css = _PARSE.getResult();
-
-
-		// 相对于父元素的位置
-		// 格式化样式:缺少基本尺寸
-		var _style = formatCss(_css);
+		// 第二次过滤，解析成可用的值
+		// 只包括_G_DIV_STYLE中属性相关的值
+		var realStyle = buildInnerCss(_obj);
 
 		// 格式化后的css属性数据
-		this.style = _style;
+		this.style = realStyle;
 
 		// 影响整个div的样式属性
 		// 主要是尺寸和位置
@@ -2056,6 +2221,8 @@
 		// 绘制这个div
 		this.draw = function(){
 			if(!_cur_div_hide){
+				var _inner_text = show_text || '';
+
 				// 准备工作结束以后
 				// 将这个div绘制出来
 				var _DRAW = new DRAW(effective_style);
@@ -2450,6 +2617,24 @@
 	function TwoPoints(x1, y1, x2, y2){
 		var p1 = new XY(x1, y1);
 		var p2 = new XY(x2, y2);
+
+		var x_dis = x2 - x1;
+		var y_dis = y2 - y1;
+
+		this.distance = Math.sqrt(x_dis * x_dis + y_dis * y_dis);
+
+		function getMidPoint(x1, y1, x2, y2){
+			return {
+				x: x1 + (x2 - x1)/2,
+				y: y1 + (y2 - y1)/2
+			};
+		}
+
+		// 中点
+		this.middlePoint = getMidPoint(x1, y1, x2, y2);
+
+		// 移动后，需要重新计算中点
+		
 	}
 
 	// ---------------------------------------------------
@@ -2499,8 +2684,7 @@
 
 				// 分析阴影属性
 				// var boxShadow = '2px 3px 5px #ccc inset, 4px 3px 5px #aaa, 2px 4px 2px #ff0000';
-
-				shadow_properties.forEach(function(item, index, arr){
+				function shadowCallback(item, index, arr){
 					item = item && item.length === 0 ? '' : item;
 
 					var cur_properties = item && item.splite(' ');
@@ -2524,8 +2708,9 @@
 					_ctx.shadowColor = color;
 
 					_ctx.stroke();
+				}
 
-				});
+				shadow_properties.forEach(shadowCallback);
 
 				_ctx.restore();
 			}
@@ -2843,43 +3028,28 @@
 
 		// 获取背景样式
 		this.background = function(){
-			var background_obj = [
-				'backgroundColor','backgroundImage','backgroundRepeat','backgroundAttachment',
-				'backgroundPosition','background','backgroundClip','backgroundOrigin','backgroundSize'
-			];
+			var background_obj = _G_DIV_STYLE['background'];
 
 			return deal(this.list, arrToObj(background_obj));
 		}
 
 		// 边框样式
 		this.border = function(){
-			var border_obj = [
-				'border','borderStyle','borderColor','borderWidth','borderImage','borderImageSource',
-				'borderImageSlice','borderImageWidth','borderImageWidth','borderImageOutset','borderImageRepeat',
-				'borderLeft','borderLeftStyle','borderLeftColor','borderLeftWidth','borderTop','borderTopStyle',
-				'borderTopColor','borderTopWidth','borderRight','borderRightStyle','borderRightColor','borderRightWidth',
-				'borderBottom','borderBottomStyle','borderBottomColor','borderBottomWidth','borderRadius','borderTopLeftRadius',
-				'borderTopRightRadius','borderBottomLeftRadius','borderBottomRightRadius'
-			];
+			var border_obj = _G_DIV_STYLE['border'];
 
 			return deal(this.list, arrToObj(border_obj));
 		}
 
 		// 获取与文字相关的css样式内容
 		this.text = function(){
-			var text_obj = [
-				'fontSize','fontWeight','fontFamily','fontStretch','fontStyle','unicodeRange','textAlign',
-				'textDecoration','color','letterSpacing','direction','lineHeight','textIndent','textShadow',
-				'textTransform','verticalAlign','whiteSpace','wordSpacing','textOverflow','wordWrap','wordBreak','textShadow'
-			];
-
+			var text_obj = _G_DIV_STYLE['text'];
 
 			return deal(this.list, arrToObj(text_obj));
 		}
 
 		// 轮廓样式
 		this.outline = function(){
-			var outline_obj = ['outlineColor','outlineStyle','outlineWidth'];
+			var outline_obj = _G_DIV_STYLE['outline'];
 
 			return deal(this.list, arrToObj(outline_obj));
 		};
@@ -2925,25 +3095,6 @@
 		// 用户外观
 		// 
 		// 
-	}
-
-	function formatCss(obj){
-		// var rgba = /^rgba\([0-2][0-9][0-9]\,\)/;
-
-		if(obj && _G_TYPE.isObject(obj)){
-			for(var name in obj){
-				// 遍历每个值，并处理每个值
-				var cur_value = obj[name];
-
-
-			}
-		}
-		// 将css样式表格式化
-		// 格式化颜色
-		// 格式化单位
-		// 格式化文字
-		// 判断值有哪些
-		return obj;
 	}
 
 	function CSS2CanvasProperties(){}

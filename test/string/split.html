@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>字符串截取</title>
+</head>
+<body>
+	
+	<script type="text/javascript">
+		// https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html
+		
+		// 将字符串截取一定长度，后面的用省略号
+		function splitString(str, len){
+			var str_len = str.length;
+			var realLen = 0;	
+
+			for(var i = 0; i < str_len; i++){
+				var codeIndex = str.charCodeAt(i);
+
+				if(codeIndex > 255){
+					// 非英语字符
+					realLen = realLen + 1;
+				}else{
+					// 其他字符
+					realLen = realLen + 0.5;
+				}
+
+				// 判断长度
+				if(realLen >= len){
+					return (str.substring(0, i) + '...');
+				}
+			}
+
+			return str;
+		}
+
+
+		var str = 'hello world,nihaoma.但是这样的话，我不想要这个的东西。你觉得呢';
+		var str1 = splitString(str, 20);
+		console.log(str1);
+
+		function TextStr(str){
+			str = str || '';
+			var len = str.length;
+			var enArr = [];// 英文字符
+			var cnArr = [];// 中文字符
+
+			var charType = 'en';
+
+			var tempS,
+				tempCode;
+			for(var i = 0; i < len; i++){
+				tempS = str[i];
+				tempCode = tempS.charCodeAt();
+
+				if(tempCode < 255){
+					// 英文字符
+					enArr.push(tempS);
+				}else{
+					cnArr.push(tempS);
+				}
+			}
+
+			var enLen = enArr.length;
+			var cnLen = cnArr.length;
+
+			if(enLen === 0 && cnLen !== 0){
+				charType = 'cn';
+			}
+
+			if(enLen !== 0 && cnLen === 0){
+				charType = 'en';
+			}
+
+			if(enLen !== 0 && cnLen !== 0){
+				charType = 'mixin';
+			}
+
+
+			this.str = str;
+			this.length = len;
+			this.enLength = enLen + cnLen * 2;// 英文长度，中文算2个
+			this.cnLength = enLen/2 + cnLen;// 中文长度
+			this.cnCodes = cnArr.slice(0);
+			this.enCodes = enArr.slice(0);
+
+			var strArr = str.split('');
+
+			this.set = function(obj){
+				return {
+					charWidth: obj.charWidth || 2,// 单个字符宽度
+				};
+			};
+
+			// 将字符翻转
+			this.reverse = (strArr.reverse()).join('');
+
+			// 第i个位置的字符
+			this.charAt = function(i){
+				if(!i){
+					i = 0;
+				}
+
+				return this.str.charAt(i);
+			};
+
+			// 第i个位置的字符编码
+			this.charCodeAt = function(i){
+				return this.str.charCodeAt(i);
+			};
+
+			// 截取
+			this.cut = function(len, repeatStr){
+				if(!repeatStr){
+					repeatStr = '......';
+				}
+
+				this.each(function(char, index, str){
+					
+				});
+			};
+
+			this.each = function(fn){
+				var len = this.str.length;
+				for(var j = 0; j < len; j++){
+					fn(this.str[j], j, this.str);
+				}
+			}
+
+			this.cutByWidth = function(str, ele){
+
+			};
+			this.curByLength = function(){};
+
+
+			// String.fromCharCode
+			// String.fromCodePoint();
+			// charCodeAt
+			// codePointAt
+			// charAt
+			// 
+		}
+
+		function Cut(str){
+			this.str = str || '';
+
+			// this.cutBy
+
+		}
+
+		function Ellipsis(str, boxElem){
+			var _style = getComputedStyle(boxElem);
+			var _w = _style['width'];
+			var _h = _style['height'];
+			var _lineHeight = _style['lineHeight'];
+		}
+
+
+		// 字符串
+		// 字符集
+		// 字符编码
+		// base64编码
+		// ASCLL码表
+		// Unicode
+		// utf-8
+		// utf-16
+		// utf-32
+		// 
+	</script>
+</body>
+</html>

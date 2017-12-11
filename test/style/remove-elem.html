@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>删除子元素</title>
+</head>
+<body>
+	<div>
+		
+		<div id="par"></div>
+	</div>
+
+	<script type="text/javascript">
+		var body = document.body;
+		var par = document.getElementById('par');
+
+		var div = document.createElement('div');
+		div.style.width = '100px';
+		div.style.height = '100px';
+		div.style.border = 'solid 1px #ccc';
+		div.style.display = 'none';
+
+		par.appendChild(div);
+
+		var style = window.getComputedStyle(div, null);
+		console.log(style);
+
+		setTimeout(function(){
+			// body.removeChild(div);
+			// alert('删除成功');
+			
+			// 父元素
+			var p = div.parentNode;
+			console.log(p);
+			div.parentNode.removeChild(div);
+		}, 3000);
+
+
+	</script>
+	
+</body>
+</html>

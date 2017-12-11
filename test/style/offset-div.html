@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>offset div style</title>
+</head>
+<body>
+	<script type="text/javascript">
+		function getDivElem(){
+			return document.createElement('div');
+		}
+
+		function setStyle(elem, css){
+			if(elem && css){
+				for(var cssName in css){
+					elem.style[cssName] = css[cssName];
+				}
+			}
+		}
+
+		// 获取计算后的css样式
+		function getStyle(elem){
+			var style = window.getComputedStyle(elem);
+			var _style = {};
+			var isNumber = function(o){
+				return Object.prototype.toString.call(o/1) === '[object Number]';
+			};
+
+			for(_name in style){
+				if(isNumber(_name) && !isNaN(_name/1)){
+					continue;
+				}
+
+				_style[_name] = style[_name];
+			}
+
+			return _style;
+		}
+
+
+		var _div = getDivElem();
+		document.body.appendChild(_div);
+
+		var _css = {
+			width: '120px',
+			height: '300px',
+			border: 'solid 1px red',
+			backgroundColor: '#eeeeee',
+			fontSize: '18px',
+			outline: 'dashed 5px #ddd',
+			position: 'absolute',
+			zIndex: -10,
+			display: 'none'
+		};
+
+		setStyle(_div, _css);
+
+		var _style = getStyle(_div);
+
+		console.log(_style);
+
+		// 如果元素没有在页面上显示的话
+		// 返回的style是没有值得
+	</script>
+</body>
+</html>

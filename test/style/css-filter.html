@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>css过滤器</title>
+</head>
+<body>
+	
+	<script type="text/javascript">
+		// 可能涉及到的样式表内容
+		var _style = {
+			animate: ['animation-name','animation-duration','animation-timing-function','animation-delay','animation-iteration-count','animation-direction','animation-play-state'],
+			background: ['background-attachment','background-color','background-image','background-position','background-repeat','background-clip','background-origin','background-size'],
+			border: ['border-bottom','border-bottom-color','border-bottom-style','border-bottom-width','border-color','border-left','border-left-color','border-left-style','border-left-width','border-right','border-right-color','border-right-style','border-right-width','border-style','border-top','border-top-color','border-top-style','border-top-width','border-width','border-bottom-left-radius','border-bottom-right-radius','border-image','border-image-outset','border-image-repeat','border-image-slice','border-image-source','border-image-width','border-radius','border-top-left-radius','border-top-right-radius'],
+			outline: ['outline-color','outline-style','outline-width'],
+			box: ['box-shadow'],
+			color: ['opacity'],
+			padding: ['padding-bottom','padding-left','padding-right','padding-top'],
+			size: ['height','width'],
+			font: ['font-family','font-size','font-style','font-variant','font-weight','font-size-adjust','font-stretch'],
+			margin: ['margin-bottom','margin-left','margin-right','margin-top'],
+			position: ['bottom','clear','clip','cursor','display','float','left','overflow','position','right','top','visibility','z-index'],
+			text: ['color','direction','letter-spacing','line-height','text-align','text-decoration','text-indent','text-transform','unicode-bidi','vertical-align','white-space','word-spacing','text-emphasis','hanging-punctuation','punctuation-trim','text-align-last','text-justify','text-outline','text-overflow','text-shadow','text-wrap','word-break','word-wrap'],
+			transition: ['transition-property','transition-duration','transition-timing-function','transition-delay']
+		};
+
+		var _style_key = ['animate', 'background', 'border', 'outline', 'box', 'color', 'padding', 'size', 'font', 'margin', 'position', 'text', 'transition'];
+
+		var cssObject = buildCssObject(_style_key);
+		console.log(cssObject);
+
+		function buildCssObject(keyArr){
+			var obj = {};
+			var len = keyArr.length;
+
+			for(var i = 0; i < len; i++){
+				var curKey = keyArr[i];
+				if(!(curKey in obj)){
+					obj[curKey] = [];
+				}
+
+				var curStyle = _style[curKey];
+				var curLen = curStyle.length;
+				for(var j = 0; j < curLen; j++){
+					var curStyleName = curStyle[j];
+					var curKeyCamel = camelKey(curStyleName);
+					obj[curKey].push(curKeyCamel);
+				}
+			}
+
+			return obj;
+		}
+
+		// 将横线分隔符字符串转换为驼峰字符串
+		function camelKey(str){
+			if(str.indexOf('-') > 0){
+				var _arr = str.split('-');
+				var len = _arr.length;
+				var _str = _arr[0];
+				if(len > 1){
+					for(var i = 1; i < len; i++){
+						_str = _str + firstUpperCase(_arr[i]);
+					}
+
+					return _str;
+				}else{
+					return str;
+				}
+			}else{
+				return str;
+			}
+		}
+
+		// 第一个字母大写
+		function firstUpperCase(str){
+			var str0 = str[0];
+			var len = str.length;
+			var strWithOut0 = str.substring(1, len);
+			return str0.toUpperCase() + strWithOut0;
+		}
+
+		var key = camelKey('backgrond-color');// backgroundColor
+		console.log(key);
+
+		var key1 = camelKey('-nihao-dk-');// -nihao-dk-
+		console.log(key1);
+
+		
+	</script>
+</body>
+</html>
