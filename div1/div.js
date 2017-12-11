@@ -5,6 +5,7 @@
 
 	// 全局变量
 	// 会一直使用的变量
+	var _G_UNIT = 'px';// 单位
 
 	// 数据类型
 	var _G_TYPE = new TYPE();
@@ -80,7 +81,7 @@
 		this.isCanCalculateNumber = function(o){
 			// 不是NaN
 			// 不是infinite
-			return this.isNumber(o) && !isNan(o) && isFinite(o);
+			return this.isNumber(o) && !isNaN(o) && isFinite(o);
 		};
 
 		this.isString = function(o){
@@ -376,6 +377,39 @@
 			}
 
 			return arr;
+		};
+
+		// 从字符串中去除单位，保留数字
+		// 如：'32px'=>32
+		this.removeUnit = function(str){
+			var _str = '';
+
+			var len = str.length;
+			var s = '';
+
+			for(var i = 0; i < len; i++){
+				s = str[i];	
+
+				if(_G_TYPE.isCanCalculateNumber(s/1)){
+					_str = _str + s;
+				}else{
+					break;
+				}
+			}
+
+			return _str;
+		};
+
+		// 在数字中加上单位，如:32=>'32px'
+		this.addUnit = function(no, unit){
+			var _no = this.removeUnit(no);
+			var _unit = unit || _G_UNIT;
+
+			if(_no.length === 0){
+				return _no;
+			}else{
+				return '' + _no + _unit;
+			}
 		};
 
 		this.offsetCanvas = function(w, h){
@@ -1001,10 +1035,8 @@
 
 		global_event.forEach(dealWithItem);
 
-
 		function addElemEventMethod(item){
 			_this[item] = function(fn){
-				console.log('好吧');
 				if(fn && _G_TYPE.isFunction(fn)){
 					var _id = _this.id;
 
@@ -1181,8 +1213,6 @@
     			}
     		};
     	}
-
-    	
     }
 
     // 今年
@@ -1687,32 +1717,23 @@
 	// --------------------------------------
 	// 如果将元素插入DOM，但是display设置为none的话，则是可以获取到计算后的css值的
 	function OffsetDiv(cssObj){
-		var elem = document.createElement('div');
-
 		cssObj = cssObj || {};
 
-		var count = 0;
-		if(cssObj && _G_TYPE.isObject(cssObj)){
-			count++;
-			for(var name in cssObj){				
-				elem.style[name] = cssObj[name];
-			}
-		}
-
-		var originDisplay = cssObj['display'];
-		cssObj['display'] = 'none';
+		var originDisplay = cssObj['display'] || 'none';
 
 		// 样式表过滤
-		function styleFileter(cssObj){
+		function styleFileter(_cssObj, displayVal){
 			var obj = {};
 
-			for(var _name in cssObj){
-				if(_G_TOOL.isCanCalculateNumber(_name)){
+			for(var _name in _cssObj){
+				if(_G_TYPE.isCanCalculateNumber(_name/1) || _G_TYPE.isFunction(_cssObj[_name])){
 					continue;
 				}
 				
-				obj[_name] = cssObj[_name];	
+				obj[_name] = _cssObj[_name];	
 			}
+
+			obj['display'] = displayVal;
 
 			return obj;
 		}
@@ -1722,34 +1743,46 @@
 		// 获取到计算后的样式之后，移除这个样式
 		// 【因为这里涉及到DOM，所以这里的性能可能会有问题】
 		// 【____性能____】
-		function getStyleValues(){
+		function getStyleValues(cssObject){
+			var elem = document.createElement('div');
 			var _body = document.body;
 			_body.appendChild(elem);
 
-			for(var _name in cssObj){
-				elem.style[_name] = cssObj[_name];	
+			var _value;
+
+			if(cssObject && _G_TYPE.isObject(cssObject)){
+				// count++;
+				for(var name in cssObject){
+					var _value = cssObject[name];
+					if(_G_TYPE.isCanCalculateNumber(_value/1) && _value/1 !== 0){
+						elem.style[name] = _value + _G_UNIT;						
+					}else{
+						elem.style[name] = _value;
+					}
+
+				}
 			}
 
 			// 获取已经应用的css值
 			var applyedCss = window.getComputedStyle(elem, null);
 
+			elem['style']['display'] = 'none';
+
+			var css = styleFileter(applyedCss, originDisplay);
+
 			// 移除这个离屏div
 			_body.removeChild(elem);
 
-			return applyedCss;
+			return css;
 		};
 
 		// 获取css样式表内容
 		this.getCss = function(){
-			if(count === 0){
-				return {};
-			}
 
-			var s = getStyle();
-			s['display'] = originDisplay;
+			var s = getStyleValues(cssObj);
 
 			// 过滤后的样式
-			return styleFileter(s);
+			return s;
 		};
 	}
 
@@ -2131,7 +2164,7 @@
 		// 【____性能____】
 		// 因为这里过滤了两次，而且每次都会过滤有200多个属性的对象，可能引起性能问题
 		// 第一次过滤，这里返回已经计算好的值了，应用在DOM上后再获取
-		var _obj = (new OffsetDiv(cssObj)).getStyleValues();
+		var _obj = (new OffsetDiv(cssObj)).getCss();
 
 		// 第二次过滤，解析成可用的值
 		// 只包括_G_DIV_STYLE中属性相关的值
@@ -2143,7 +2176,7 @@
 		// 影响整个div的样式属性
 		// 主要是尺寸和位置
 		
-		var effective_style = getEffectStyle(_style);
+		var effective_style = getEffectStyle(realStyle);
 
 		this.id = _id_value;
 		this.klass = '';
@@ -2338,12 +2371,12 @@
 			};
 
 			// 基本位置
-			var w = _style.width;
-			var h = _style.height;
-			var x = _style.left;
-			var y = _style.top;
+			var w = _G_TOOL.removeUnit(_style.width);
+			var h = _G_TOOL.removeUnit(_style.height);
+			var x = _G_TOOL.removeUnit(_style.left);
+			var y = _G_TOOL.removeUnit(_style.top);
 
-			var radius = _style['borderRadius'] || 0;
+			var radius = _G_TOOL.removeUnit(_style['borderRadius']) || 0;
 
 			// 确定div的圆角
 			if(w > h){
@@ -2686,6 +2719,10 @@
 				// var boxShadow = '2px 3px 5px #ccc inset, 4px 3px 5px #aaa, 2px 4px 2px #ff0000';
 				function shadowCallback(item, index, arr){
 					item = item && item.length === 0 ? '' : item;
+
+					if(item === 'none'){
+						return;
+					}
 
 					var cur_properties = item && item.splite(' ');
 					var real_arr = [];
