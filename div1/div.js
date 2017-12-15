@@ -519,6 +519,49 @@
 		}
 	}
 
+
+	// 内部图片对象
+	function InnerImage(src, linkObject, type){
+		var _this = this;
+		var loaded;
+
+		var img = new Image(src || '');
+		this.img = img;
+
+		img.onload = function(e){
+			console.log(e);
+			var w = img.width;
+			var h = img.height;
+
+			// 绘制在离屏canvas上
+			var c = _G_TOOL.offsetCanvas(w, h);
+			var ctx = c._ctx;
+			// 将该图片放置于离屏canvas上
+			ctx.drawImage(img, 0, 0);
+
+			// 加载完成
+			loaded.call(_this, e, w, h, src);
+		};
+
+		// 图片加载完成
+		this.loaded = function(fn){
+			if(fn && _G_TYPE.isFunction(fn)){
+				loaded = fn;
+			}
+		};
+
+		// 相关的对象
+		this.link = linkObject || null;
+
+		// 该图片的类别：背景，边框......
+		this.type = type || null;
+	}
+
+	function bgImage(bgImageValue){
+		var str = bgImageValue;
+		var strArr = bgImageValue.split(' ');
+	}
+
 	// DOM元素方法
 	function Elem(ele){
 		// var doc = window && window.document;
@@ -2791,17 +2834,31 @@
 			
 			// 分析背景内容
 			var background_color = backgroundCss['backgroundColor'] || '#fff';
-			var background_image = backgroundCss['backgroundImage'];
 
 			// 填充的颜色值
 			_ctx.fillStyle = background_color;
 			
 			// 填充
 			_ctx.fill();
+
+			// 画图片
+			var background_image = backgroundCss['backgroundImage'];// 字符串
+
+			var inner_img = null;
 			
-			// 如果有背景图片该怎么处理？
-			
+			if(background_image.length !== 0){
+				inner_img = new InnerImage(background_image);
+				inner_img.loaded(function(event, w, h, src){
+					// 画出来
+					var obj = this.link;
+					// 根据link分析出图片相关位置信息
+					// obj.draw();
+					
+				});
+			}
+
 			_ctx.restore();
+
 		};
 
 		// 画边框
@@ -3091,50 +3148,6 @@
 			return deal(this.list, arrToObj(outline_obj));
 		};
 	}
-
-	// 分析器
-	// 分析的结果是什么呢
-	function Analysis(){
-		this.boxShadow = function(obj){};
-		this.border = function(obj){};
-		this.outline = function(obj){};
-		this.background = function(obj){};
-		this.text = function(obj){};
-
-		// 尺寸和位置
-		// 颜色和样式
-		// 动画
-
-		// 动画
-		// 背景
-		// 边框和轮廓
-		// 颜色：opacity
-		// 盒子
-		// 颜色
-		// 内边距
-		// 媒体页面内容属性
-		// 尺寸
-		// 弹性盒子
-		// 字体
-		// 网格
-		// 线框
-		// 列表
-		// 外边距
-		// 多列
-		// 定位
-		// 分页
-		// ruby
-		// 语音
-		// 表格
-		// 文本
-		// 2d/3d
-		// 过度
-		// 用户外观
-		// 
-		// 
-	}
-
-	function CSS2CanvasProperties(){}
 
 	// ----------------------------------------------------------------
 	// ----------------------------------------------------------------
