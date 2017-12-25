@@ -72,7 +72,8 @@
 				return false;
 			}
 		};
-		
+			
+		// 数字
 		this.isNumber = function(o){
 			return this.is(o, 'number');
 		};
@@ -84,14 +85,17 @@
 			return this.isNumber(o) && !isNaN(o) && isFinite(o);
 		};
 
+		// 字符串
 		this.isString = function(o){
 			return this.is(o, 'string');
 		};
 
+		// undefined
 		this.isUndefined = function(o){
 			return this.is(o, 'undefined');
 		};
 
+		// 浮点数
 		this.isFloat = function(o){
 			if(this.is(o, 'number')){
 				return !(o%1 === 0);
@@ -100,6 +104,7 @@
 			}
 		};
 
+		// 函数
 		this.isFunction = function(o){
 			return typeof o === 'function';
 		};
@@ -523,13 +528,12 @@
 	// 内部图片对象
 	function InnerImage(src, linkObject, type){
 		var _this = this;
-		var loaded;
+		var loadedCallback;
 
 		var img = new Image(src || '');
 		this.img = img;
 
 		img.onload = function(e){
-			console.log(e);
 			var w = img.width;
 			var h = img.height;
 
@@ -540,13 +544,13 @@
 			ctx.drawImage(img, 0, 0);
 
 			// 加载完成
-			loaded.call(_this, e, w, h, src);
+			loadedCallback.call(_this, e, w, h, src);
 		};
 
 		// 图片加载完成
 		this.loaded = function(fn){
 			if(fn && _G_TYPE.isFunction(fn)){
-				loaded = fn;
+				loadedCallback = fn;
 			}
 		};
 
@@ -557,9 +561,42 @@
 		this.type = type || null;
 	}
 
-	function bgImage(bgImageValue){
-		var str = bgImageValue;
-		var strArr = bgImageValue.split(' ');
+	// 图片效果
+	function ImageEffect(src){
+		this.src = src;
+		var _imgElem = null;
+		var _canvasElem = null;
+		var _ctx = null;
+		var _this = this;
+		
+		var _img = new Image();
+		_img.src = src;
+
+		var _img_ok = false;
+
+
+		_img.onload = function(e){
+			_img_ok = true;
+			_imgElem = _img;
+			var w = _img.width;
+			var h = _img.height;
+
+			_canvasElem = _G_TOOL.createCanvas(w, h);
+			_ctx = _canvasElem.getContext('2d');
+			_ctx.drawImage(_img, x, y);
+		};
+
+		// 裁切
+		this.crop = function(x, y, w, h){
+			if(_img_ok){
+				var _other_img = _G_TOOL.createCanvas(w, h);
+				var _other_ctx = _other_img.getContext('2d');
+				_other_ctx.drawImage(_canvasElem, x, y, w, h, 0, 0, w, h);
+				return _other_img.toDataURL('jpg');
+			}else{
+
+			}
+		};
 	}
 
 	// DOM元素方法
