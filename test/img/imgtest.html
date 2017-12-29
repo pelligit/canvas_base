@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>测试</title>
+</head>
+<body>
+	
+	<script type="text/javascript">
+		// 工具类
+	// 类型判断
+	function TYPE(){
+		this.is = function(o, type){
+			return (Object.prototype.toString.call(o)).toLowerCase() === '[object '+ type.toLowerCase() +']';
+		};
+
+		this.isInt = function(o){
+			if(this.is(o, 'number')){
+				return o%1 === 1;
+			}else{
+				return false;
+			}
+		};
+			
+		// 数字
+		this.isNumber = function(o){
+			return this.is(o, 'number');
+		};
+
+		// 可用于计算的数字类型
+		this.isCanCalculateNumber = function(o){
+			// 不是NaN
+			// 不是infinite
+			return this.isNumber(o) && !isNaN(o) && isFinite(o);
+		};
+
+		// 字符串
+		this.isString = function(o){
+			return this.is(o, 'string');
+		};
+
+		// undefined
+		this.isUndefined = function(o){
+			return this.is(o, 'undefined');
+		};
+
+		// 浮点数
+		this.isFloat = function(o){
+			if(this.is(o, 'number')){
+				return !(o%1 === 0);
+			}else{
+				return false;
+			}
+		};
+
+		// 函数
+		this.isFunction = function(o){
+			return typeof o === 'function';
+		};
+
+		this.isArray = function(o){
+			return this.is(o, 'array');
+		};
+
+		this.isObject = function(o){
+			return this.is(o, 'object');
+		};
+
+		this.isEmptyObject = function(o){
+			if(this.isObject(o)){
+				// 如果是对象的话
+				var count = 0;
+
+				for(var name in o){
+					count = count + 1;
+				}
+
+				return count === 0 ? true : false;
+			}else{
+				return false;
+			}
+		};
+
+		// 简单类型：值类型，字符串，数字，null，undefined，Boolean
+		this.isValue = function(o){
+			return !(this.isObject(o) || this.isArray(o));
+		};
+
+		// 是不是事件的名字
+		this.isEventName = function(o){
+			if(!o || !_G_TYPE.isString(o)){
+				return false;
+			}
+
+			var event_list = EVENT_LIST();
+			var arr = [];
+			var event_arr = arr.concat(event_list['elem_event'], event_list['doc_event']);
+			var len = event_arr.length;
+
+			for(var i = 0; i < len; i++){
+				if(event_arr[i] == o.toLowerCase()){
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		this.isKeyBoardEventName = function(name){
+			if(name && (name.toLowerCase() === 'keydown' || name.toLowerCase() === 'keypress' || name.toLowerCase() === 'keyup')){
+				return true;
+			}else{
+				return false;
+			}
+		};
+
+		// 是颜色值:rgb,hsl,rgba, hsla, #ffeeaa
+		this.isColor = function(val){
+
+		};
+
+		// 是边框样式：solid,dashed,
+		this.isBorderStyle = function(val){};
+
+		// 是长度值：1px，2px，3px之类的
+		this.isLength = function(val){};
+
+		// 是百分比单位
+		this.isPercentage = function(val){};
+
+		// 是图片路径
+		this.isImgUrl = function(val){
+
+		};
+
+		// 是否是闰年
+		this.isLeap = function(y){
+			if(y && this.isCanCalculateNumber(y) && y > 0){
+    			if(y%100 === 0){
+    				// 能被100整除
+    				if(y%400 === 0){
+    					return true;
+    				}else{
+    					return false;
+    				}
+    			}else{
+    				if(y%4 === 0){
+    					return true;
+    				}else{
+    					return false;
+    				}
+    			}
+    		}else{
+    			return false;
+    		}
+		};
+	}
+
+
+		// 工具，杂项工具
+	function Tools(){
+
+		// 创建canvas元素
+		this.createCanvas = function(w, h){
+			var _w = w && _G_TYPE.isCanCalculateNumber(w) ? w : 300;
+			var _h = h && _G_TYPE.isCanCalculateNumber(h) ? h : 150;
+
+			var canva = document.createElement('canvas');
+			canva.width = _w;
+			canva.height = _h;
+
+			return canva;
+		};
+
+
+
+		this.offsetCanvas = function(w, h){
+			return new OffsetCanvas(w, h);
+		};
+
+		this.loadImgs = function(imgSrcList, fn){
+			loadAllImg(imgSrcList, fn);
+		};
+
+		// 离屏canvas
+		function OffsetCanvas(w, h){
+			var o_canvas = _G_TOOL.createCanvas(w, h);
+			var o_ctx = o_canvas.getContext('2d');
+
+			this._canvas = o_canvas;
+			this._ctx = o_ctx;
+			this._width = o_canvas.width;
+			this._height = o_canvas.height;
+
+			this.saveImg = function(type, quality){
+				var typeVal = type || 'image/png';
+				var qualityVal = quality || 1;
+				return this._canvas.toDataURL(typeVal, qualityVal);
+			};
+
+			this.draw = function(fn){
+				if(_G_TYPE.isFunction(fn)){
+					fn(this._ctx);
+				}
+			};
+
+			return this;
+		}
+
+		// 加载所有的图片
+		/**
+		 * [loadAllImg description]
+		 * @param  {[array]}   imgSrcList [图片链接的地址集]
+		 * @param  {Function} fn         [回调函数，当所有的图片都加载好了后调用]
+		 * @return {[undefined]}              [没有返回值]
+		 */
+		function loadAllImg(imgSrcList, fn){
+			var srcList = _G_TYPE.isArray(imgSrcList) ? imgSrcList : [imgSrcList];
+			
+			var useFul = 0;
+			var loadCount = 0;
+			var useFulList = [];
+
+			function dealWithItem(item, index, arr){
+				if(_G_TYPE.isString(item)){
+					useFul = useFul + 1;
+					useFulList.push(item);
+
+					var img = new Image();
+					img.src = item;
+					img.onload = function(e){
+						loadCount = loadCount + 1;
+
+						if(loadCount >= useFul){
+							console.log('全部加载成功');
+							if(_G_TYPE.isFunction(fn)){
+								fn(useFulList);
+							}
+						}
+					};
+				}
+			}
+
+			srcList.forEach(dealWithItem);
+		}
+	}
+
+	// 数据类型
+	var _G_TYPE = new TYPE();
+
+	// 工具
+	var _G_TOOL = new Tools();
+
+	// 图片效果
+	function ImageEffect(src){
+		this.src = src;
+		var _canvasElem = null;
+		var _ctx = null;
+		var _this = this;
+		
+		var _img = new Image();
+		_img.src = src;
+
+		var _img_ok = false;
+
+		// 加载完成
+		_img.onload = function(e){
+			_img_ok = true;
+
+			var w = _img.width;
+			var h = _img.height;
+
+			_canvasElem = _G_TOOL.createCanvas(w, h);
+			_ctx = _canvasElem.getContext('2d');
+			_ctx.drawImage(_img, 0, 0);
+		};
+
+		// 裁切
+		this.crop = function(x, y, w, h){
+			if(_img_ok){
+				var _other_img = _G_TOOL.createCanvas(w, h);
+				var _other_ctx = _other_img.getContext('2d');
+				_other_ctx.drawImage(_canvasElem, x, y, w, h, 0, 0, w, h);
+				return {
+					src: _other_img.toDataURL(),
+					width: w,
+					height: h
+				};
+			}else{
+				return false;
+			}
+		};
+
+		// 直接保存为图片
+		this.image = function(){
+			if(_img_ok){
+				var imgStr = _canvasElem.toDataURL();
+
+				return {
+					src: imgStr,
+					width: _canvasElem.width,
+					height: _canvasElem.height
+				};
+			}else{
+				return false;
+			}
+		};
+
+		this.isLoaded = function(){
+			return _img_ok;
+		};
+
+		this.showImg = function(imgObj){
+			var elem = new Image();
+			elem.src = imgObj.src;
+			elem.width = imgObj.width;
+			elem.height = imgObj.height;
+			document.body.appendChild(elem);
+		};
+	}
+
+
+	// 加载图片
+	// 处理图片
+	// 
+	// 
+	// 
+	// 已经绘过图的canvas
+	function EffectImg(canvas_with_img){
+		this.width = canvas_with_img.width;
+		this.height = canvas_with_img.height;
+
+		// 保存原始图片
+		var originCanva = _G_TOOL.createCanvas(this.width, this.height);
+		var originCtx = originCanva.getContext('2d');
+		originCtx.drawImage(canvas_with_img, 0, 0, this.width, this.height);
+			
+		// 图片类型
+		var img_type_str = 'image/png';
+
+		// 图片类型
+		this.getImageType = function(){
+			return img_type_str.replace('image/');
+		};
+
+		this.setImageType = function(type){
+			img_type_str = 'image/' + type;
+		};
+
+		// 获取
+		this.getImage = function(){
+			return canvas_with_img.toDataURL(img_type_str);
+		};
+	}
+
+	var crops = new ImageEffect('./img/fis3-logo.png');
+	setTimeout(function(){
+		console.log(crops.image());
+		crops.showImg(crops.image());
+
+		crops_src = crops.crop(30, 30, 50, 50);
+		crops.showImg(crops_src);
+	}, 5000)
+	</script>
+</body>
+</html>
